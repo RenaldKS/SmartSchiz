@@ -229,4 +229,6 @@
 \nیادداشت: درصورتی که فایل با فرمت .res شما دقیقا مشابه فایلِ از پیش نصب شده می‌باشد نیازی به نصب مجدد آن نیست.
 \n
 \nبا مسئولیت خودتان ادامه دهید!</string>
+    <string name="register_activity_label">Register</string>
+    <string name="login_activity_label">Login</string>
 </resources>

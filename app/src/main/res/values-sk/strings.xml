@@ -563,4 +563,6 @@
     <string name="battery_low_threshold">Hranica nízkej úrovne batérie</string>
     <string name="battery_full_notify_enabled">Oznámenie pri plnom nabití</string>
     <string name="activity_type_not_worn">Zariadenie nepoužívané</string>
+    <string name="register_activity_label">Register</string>
+    <string name="login_activity_label">Login</string>
 </resources>

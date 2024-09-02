@@ -1719,4 +1719,6 @@
     <string name="devicetype_casiogb6900">Касио ГБ-6900</string>
     <string name="pref_title_pebble_always_ack_pebblekit">Прерани Пебловкит АЦК</string>
     <string name="devicetype_amazfit_band7">Амејзфит Банд 7</string>
+    <string name="register_activity_label">Register</string>
+    <string name="login_activity_label">Login</string>
 </resources>

@@ -2862,4 +2862,6 @@
     <string name="stepRateAvg">Середня частота кроків</string>
     <string name="midFootLandings">Приземлення на середню частину стопи</string>
     <string name="stepRateSum">Сума частоти кроків</string>
+    <string name="register_activity_label">Register</string>
+    <string name="login_activity_label">Login</string>
 </resources>

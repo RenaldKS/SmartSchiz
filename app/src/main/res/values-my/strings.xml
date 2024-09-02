@@ -76,4 +76,6 @@
     <string name="steps_streaks_total_steps_average_hint">တစ်နေ့လျှင် စုစုပေါင်း ပျမ်းမျှ %d ခြေလှမ်</string>
     <string name="qhybrid_title_on_device_confirmation">စိတ်ချိန်စက်ရန် အတည်ပြုချက်အား ဖွင့်ခြင်း</string>
     <string name="watchface_widget_type_custom">စိတ်ကြိုက် ဝစ်ဂျက်</string>
+    <string name="register_activity_label">Register</string>
+    <string name="login_activity_label">Login</string>
 </resources>

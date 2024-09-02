@@ -2797,4 +2797,6 @@
     <string name="activity_type_long_jump">Skok w dal</string>
     <string name="activity_type_high_jump">Skok wzwyż</string>
     <string name="devicetype_miband8active">Xiaomi Smart Band 8 Active</string>
+    <string name="register_activity_label">Register</string>
+    <string name="login_activity_label">Login</string>
 </resources>

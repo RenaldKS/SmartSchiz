@@ -1001,4 +1001,6 @@
     <string name="calendar_day">Μέρα</string>
     <string name="battery_level">Επίπεδο μπαταρίας</string>
     <string name="lefun_prefs_interface_language_title">Γλώσσα</string>
+    <string name="register_activity_label">Register</string>
+    <string name="login_activity_label">Login</string>
 </resources>

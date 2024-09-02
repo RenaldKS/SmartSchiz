@@ -706,4 +706,6 @@
     <string name="gadgetbridge_running_banglejs_main">Bangle.js正在執行</string>
     <string name="about_activity_title_banglejs_nightly">關於Bangle.js Gadgetbridge（每晚）</string>
     <string name="supercars_lights_blinking_label">閃爍</string>
+    <string name="register_activity_label">Register</string>
+    <string name="login_activity_label">Login</string>
 </resources>

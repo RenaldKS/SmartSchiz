@@ -2934,4 +2934,6 @@
     <string name="agps_status_pending">ממתין</string>
     <string name="agps_status_current">נוכחי</string>
     <string name="agps_status_error">שגיאה</string>
+    <string name="register_activity_label">Register</string>
+    <string name="login_activity_label">Login</string>
 </resources>

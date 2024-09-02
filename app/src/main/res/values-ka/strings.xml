@@ -194,4 +194,6 @@
     <string name="blacklist_all_for_notifications">შეტყობინებებიდან ყველას გაცხრილვა</string>
     <string name="whitelist_all_for_notifications">ყველა გაფრთხილების თეთრ სიაში ჩასმა</string>
     <string name="pref_header_sensors_calibration">სენსორის კალიბრაცია</string>
+    <string name="register_activity_label">Register</string>
+    <string name="login_activity_label">Login</string>
 </resources>

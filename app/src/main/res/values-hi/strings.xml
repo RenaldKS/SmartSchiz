@@ -159,4 +159,6 @@
     <string name="sonyswr12_settings_title">Sony SWR12 समायोजन</string>
     <string name="sonyswr12_settings_low_vibration">कम कंपन सक्षम</string>
     <string name="sonyswr12_settings_stamina">पर बिजली की बचत मोड</string>
+    <string name="register_activity_label">Register</string>
+    <string name="login_activity_label">Login</string>
 </resources>

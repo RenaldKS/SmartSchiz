@@ -530,4 +530,6 @@
     <string name="controlcenter_change_fm_frequency">Cambiar frecuencia FM</string>
     <string name="controlcenter_change_led_color">Cambiar cor LED</string>
     <string name="find_lost_device_message">Buscar a %1$s\?</string>
+    <string name="register_activity_label">Register</string>
+    <string name="login_activity_label">Login</string>
 </resources>

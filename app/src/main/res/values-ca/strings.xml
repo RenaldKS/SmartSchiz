@@ -1524,4 +1524,6 @@
     <string name="appmanager_downloaded_to_cache">Descarregat %s a cache</string>
     <string name="appmanager_download_app_error">Error descarregant la app</string>
     <string name="speed_first">Velocitat primer</string>
+    <string name="register_activity_label">Register</string>
+    <string name="login_activity_label">Login</string>
 </resources>

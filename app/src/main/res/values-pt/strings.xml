@@ -2288,4 +2288,6 @@
 \n
 \nSIGA POR SUA PRÓPRIA CONTA E RISCO!</string>
     <string name="pref_cache_weather_summary">As informações do clima serão armazenadas em cache durante as reinicializações da aplicação.</string>
+    <string name="register_activity_label">Register</string>
+    <string name="login_activity_label">Login</string>
 </resources>

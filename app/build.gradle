@@ -227,6 +227,10 @@ dependencies {
     implementation 'com.google.android.flexbox:flexbox:3.0.0'
     implementation "com.google.code.gson:gson:2.11.0"
 
+    implementation 'com.google.firebase:firebase-auth:19.3.2'
+    implementation 'com.google.firebase:firebase-firestore:21.7.1'
+    implementation 'com.google.firebase:firebase-messaging:20.3.0'
+
     implementation "no.nordicsemi.android:dfu:1.12.0"
     implementation "com.github.tony19:logback-android:3.0.0"
     implementation "org.slf4j:slf4j-api:2.0.16"

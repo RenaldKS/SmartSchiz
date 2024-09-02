@@ -86,4 +86,6 @@
     <string name="sonyswr12_settings_low_vibration">കുറഞ്ഞ വൈബ്രേഷൻ പ്രവർത്തനക്ഷമമാക്കി</string>
     <string name="sonyswr12_settings_stamina">പവർ സേവിംഗ് മോഡ് ഓണാണ്</string>
     <string name="sonyswr12_settings_alarm_interval">മിനിറ്റുകൾക്കുള്ളിൽ സ്മാർട്ട് അലാറം ഇടവേള</string>
+    <string name="register_activity_label">Register</string>
+    <string name="login_activity_label">Login</string>
 </resources>

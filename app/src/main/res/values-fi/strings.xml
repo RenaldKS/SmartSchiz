@@ -593,4 +593,6 @@
     <string name="gadgetbridge_running_main_nightly">Gadgetbridge Nightly on käynnissä</string>
     <string name="application_name_banglejs_nightly">Bangle.js Gadgetbridge Nightly</string>
     <string name="application_name_main_nightly">Gadgetbridge Nightly</string>
+    <string name="register_activity_label">Register</string>
+    <string name="login_activity_label">Login</string>
 </resources>

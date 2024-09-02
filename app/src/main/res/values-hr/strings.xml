@@ -1598,4 +1598,6 @@
     <string name="watchface_setting_button_move_hands">Pomakni kazaljke</string>
     <string name="prefs_always_on_display_follow_watchface">Stil slijedi brojčanik</string>
     <string name="watchface_dialog_title_widget">Postavke widgeta</string>
+    <string name="register_activity_label">Register</string>
+    <string name="login_activity_label">Login</string>
 </resources>

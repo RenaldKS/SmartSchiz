@@ -3065,4 +3065,6 @@ Temps de sommeil préféré en heures</string>
     <string name="devicetype_garmin_venu_3">Garmin Venu 3</string>
     <string name="devicetype_garmin_instinct_solar">Garmin Instinct Solar</string>
     <string name="devicetype_garmin_instinct_2_soltac">Garmin Instinct 2 SolTac</string>
+    <string name="register_activity_label">Register</string>
+    <string name="login_activity_label">Login</string>
 </resources>

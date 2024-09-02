@@ -3078,4 +3078,6 @@
     <string name="pref_speak_notifications_focus_exclusive_summary_off">Volume pemutaran aplikasi lain akan direndahkan ketika notifikasi ini diucapkan</string>
     <string name="devicetype_garmin_venu_2">Garmin Venu 2</string>
     <string name="devicetype_garmin_forerunner_245">Garmin Forerunner 245</string>
+    <string name="register_activity_label">Register</string>
+    <string name="login_activity_label">Login</string>
 </resources>

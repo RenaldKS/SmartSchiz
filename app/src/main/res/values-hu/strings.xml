@@ -2486,4 +2486,6 @@
     <string name="proprietary_app_warning">Ez a funkció egy zárt forráskódú alkalmazás telepítését igényli</string>
     <string name="agps_status_error">Hiba</string>
     <string name="pref_wearing_tone_summary">Hangjelzés a fülhallgató behelyezésekor</string>
+    <string name="register_activity_label">Register</string>
+    <string name="login_activity_label">Login</string>
 </resources>

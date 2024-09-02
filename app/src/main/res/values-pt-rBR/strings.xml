@@ -2398,4 +2398,6 @@
 \n
 \nToque em \'%2$s\' para concordar.</string>
     <string name="fwapp_install_device_not_supported">O arquivo não pode ser instalado, o dispositivo não é compatível.</string>
+    <string name="register_activity_label">Register</string>
+    <string name="login_activity_label">Login</string>
 </resources>

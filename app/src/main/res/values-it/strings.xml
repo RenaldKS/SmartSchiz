@@ -2891,4 +2891,6 @@
     <string name="devicetype_garmin_fenix_7s">Garmin Fenix 7S</string>
     <string name="widget_layout_top_wide_bot_large">Largo sopra, grande sotto</string>
     <string name="devicetype_garmin_venu_2">Garmin Venu 2</string>
+    <string name="register_activity_label">Register</string>
+    <string name="login_activity_label">Login</string>
 </resources>

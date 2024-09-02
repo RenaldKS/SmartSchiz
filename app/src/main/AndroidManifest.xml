@@ -142,14 +142,21 @@
             android:theme="@style/SplashTheme"
             android:launchMode="singleTop"
             android:exported="true">
+        </activity>
+        <activity
+            android:name=".activities.LoginActivity"
+            android:exported="true"
+            android:label=" @string/login_activity_label">
             <intent-filter>
                 <category android:name="android.intent.category.DEFAULT" />
-
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <activity
+            android:name=".activities.RegisterActivity"
+            android:label="@string/register_activity_label"
+            android:parentActivityName=".activities.LoginActivity" />
         <activity
             android:name=".activities.SettingsActivity"
             android:label="@string/title_activity_settings"

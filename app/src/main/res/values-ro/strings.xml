@@ -194,4 +194,6 @@
     <string name="gps_galileo">GPS + GALILEO</string>
     <string name="debugactivity_really_factoryreset_title">Chiar dorești o restaurare a setărilor din fabrică?</string>
     <string name="devicetype_xiaomi_watch_s1_active">Xiaomi Watch S1 Active</string>
+    <string name="register_activity_label">Register</string>
+    <string name="login_activity_label">Login</string>
 </resources>

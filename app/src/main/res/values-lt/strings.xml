@@ -565,4 +565,6 @@
     <string name="user_feedback_all_alarms_disabled">Visi žadintuvai išjungti</string>
     <string name="miband_prefs_reserve_alarm_calendar">Žadintuvai rezervuoti ateities įvykiams</string>
     <string name="mi2_prefs_do_not_disturb_summary">Apyrankė negaus pranešimų kol įjungta</string>
+    <string name="register_activity_label">Register</string>
+    <string name="login_activity_label">Login</string>
 </resources>

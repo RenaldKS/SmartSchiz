@@ -650,4 +650,6 @@
     <string name="appmanager_app_start">시작</string>
     <string name="activity_list_summary_active_time">활성 시간</string>
     <string name="activity_list_summary_activities">활동</string>
+    <string name="register_activity_label">Register</string>
+    <string name="login_activity_label">Login</string>
 </resources>
