@@ -1,0 +1,43 @@
+apply plugin: 'java'
+apply plugin: 'maven-publish'
+apply plugin:'application'
+
+archivesBaseName = 'gadgetbridge-daogenerator'
+
+dependencies {
+    // https://github.com/Freeyourgadget/greenDAO/tree/fyg
+    implementation 'com.github.Freeyourgadget:greendao:1998d7cd2d21f662c6044f6ccf3b3a251bbad341'
+}
+
+sourceSets {
+    main {
+        java {
+            srcDir 'src'
+        }
+    }
+}
+
+mainClassName = "nodomain.freeyourgadget.gadgetbridge.daogen.GBDaoGenerator"
+
+tasks.register('genSources', JavaExec) {
+    mainClass = mainClassName
+    classpath = sourceSets.main.runtimeClasspath
+    workingDir = '../'
+}
+
+artifacts {
+    archives jar
+}
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_1_8
+    targetCompatibility = JavaVersion.VERSION_1_8
+}
+
+tasks.named("distTar") {
+    duplicatesStrategy = 'include'
+}
+
+tasks.named("distZip") {
+    duplicatesStrategy = 'include'
+}
