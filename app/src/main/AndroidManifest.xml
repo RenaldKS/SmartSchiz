@@ -137,21 +137,25 @@
             </intent-filter>
         </receiver>
         <activity
-            android:name=".activities.ControlCenterv2"
+            android:name=".activities.LoginActivity"
             android:label="@string/title_activity_controlcenter"
             android:theme="@style/SplashTheme"
             android:launchMode="singleTop"
             android:exported="true">
-        </activity>
-        <activity
-            android:name=".activities.LoginActivity"
-            android:exported="true"
-            android:label=" @string/login_activity_label">
             <intent-filter>
                 <category android:name="android.intent.category.DEFAULT" />
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+        </activity>
+        <activity
+            android:name=".activities.ControlCenterv2"
+            android:label="@string/title_activity_controlcenter"
+            android:theme="@style/SplashTheme"
+            android:launchMode="singleTop"
+            android:exported="true">
+
+            <!-- Other intent filters can remain here -->
         </activity>
         <activity
             android:name=".activities.RegisterActivity"

@@ -5,11 +5,23 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
+    <TextView
+        android:id="@+id/appname"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="SmartSchiz"
+        android:textColor="@color/primarytext_light"
+        android:textSize="30sp"
+        android:textAlignment="center"
+        tools:ignore="MissingConstraints"
+        tools:layout_editor_absoluteX="0dp"
+        tools:layout_editor_absoluteY="155dp" />
+
     <LinearLayout
         android:id="@+id/square"
         android:layout_width="300dp"
         android:layout_height="300dp"
-        android:background="@color/primary_dark"
+        android:background="@color/primarytext_dark"
         android:orientation="vertical"
         android:padding="16dp"
         app:layout_constraintBottom_toBottomOf="parent"
@@ -17,11 +29,13 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent">
 
+
+
         <EditText
             android:id="@+id/username"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="Username"
+            android:hint="Email"
             android:inputType="textEmailAddress"
             app:layout_constraintTop_toTopOf="parent" />
 

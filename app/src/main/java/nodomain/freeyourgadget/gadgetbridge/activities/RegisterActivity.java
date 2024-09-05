@@ -3,66 +3,81 @@ package nodomain.freeyourgadget.gadgetbridge.activities;
 import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
-import android.text.Editable;
-import android.text.TextWatcher;
-import android.view.View;
+import android.util.Log;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
+
+import androidx.annotation.NonNull;
+
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 
 import nodomain.freeyourgadget.gadgetbridge.R;
 
 public class RegisterActivity extends Activity {
 
+    private static final String TAG = "RegisterActivity";
+
     private EditText emailField;
     private EditText passwordField;
+    private EditText confirmPasswordField;
     private Button registerButton;
-    private EditText nameField;
+    private FirebaseAuth mAuth;
+    private Button backButton;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_register);
 
-        emailField = (EditText) findViewById(R.id.emailEditText);
-        nameField = (EditText) findViewById(R.id.nameEditText);
-        passwordField = (EditText) findViewById(R.id.passwordEditText);
-        registerButton = (Button) findViewById(R.id.registerButton);
+        // Initialize Firebase Auth
+        mAuth = FirebaseAuth.getInstance();
 
-        // Initially disable the button
-        registerButton.setEnabled(false);
+        emailField = findViewById(R.id.email);
+        passwordField = findViewById(R.id.password);
+        confirmPasswordField = findViewById(R.id.confirm_password);
+        registerButton = findViewById(R.id.register_button);
+        backButton = findViewById(R.id.back_button);
 
-        // Create a TextWatcher
-        TextWatcher textWatcher = new TextWatcher() {
-            @Override
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+        registerButton.setOnClickListener(v -> {
+            String email = emailField.getText().toString().trim();
+            String password = passwordField.getText().toString().trim();
+            String confirmPassword = confirmPasswordField.getText().toString().trim();
 
-            @Override
-            public void onTextChanged(CharSequence s, int start, int before, int count) {
-                // Enable the button if all fields are filled
-                if (!emailField.getText().toString().trim().isEmpty() &&
-                        !nameField.getText().toString().trim().isEmpty() &&
-                        !passwordField.getText().toString().trim().isEmpty()) {
-                    registerButton.setEnabled(true);
-                } else {
-                    registerButton.setEnabled(false);
-                }
+            if (!password.equals(confirmPassword)) {
+                Toast.makeText(RegisterActivity.this, "Passwords do not match", Toast.LENGTH_SHORT).show();
+                return;
             }
 
-            @Override
-            public void afterTextChanged(Editable s) {}
-        };
-
-        // Add the TextWatcher to each EditText
-        emailField.addTextChangedListener(textWatcher);
-        nameField.addTextChangedListener(textWatcher);
-        passwordField.addTextChangedListener(textWatcher);
-
-        registerButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                startActivity(new Intent(RegisterActivity.this, LoginActivity.class));
-            }
+            registerUser(email, password);
         });
+        backButton.setOnClickListener(v -> {
+            finish(); // Finish the current activity and return to the previous one
+        });
+    }
+
+    private void registerUser(String email, String password) {
+        if (email.isEmpty() || password.isEmpty()) {
+            Toast.makeText(RegisterActivity.this, "Form tidak boleh kosong", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        mAuth.createUserWithEmailAndPassword(email, password)
+                .addOnCompleteListener(this, task -> {
+                    if (task.isSuccessful()) {
+                        // Sign up success
+                        FirebaseUser user = mAuth.getCurrentUser();
+                        Log.d(TAG, "createUserWithEmail:success");
+                        Toast.makeText(RegisterActivity.this, "Registration Successful", Toast.LENGTH_SHORT).show();
+                        startActivity(new Intent(RegisterActivity.this, LoginActivity.class));
+                        finish(); // Close the registration activity after success
+                    } else {
+                        // If sign up fails, display a message to the user.
+                        Log.w(TAG, "createUserWithEmail:failure", task.getException());
+                        Toast.makeText(RegisterActivity.this, "Registration Failed: " + task.getException().getMessage(),
+                                Toast.LENGTH_SHORT).show();
+                    }
+                });
     }
 }
