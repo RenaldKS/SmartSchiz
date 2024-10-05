@@ -3234,4 +3234,6 @@
     <string name="smart_ring_measurement_error_unknown">Unknown measurement error %d received from ring</string>
     <string name="register_activity_label">Register</string>
     <string name="login_activity_label">Login</string>
+    <string name="alarm_activity_label">Alarm Activity</string>
+    <string name="action_AlarmActivity">Alarm Activity</string>
 </resources>

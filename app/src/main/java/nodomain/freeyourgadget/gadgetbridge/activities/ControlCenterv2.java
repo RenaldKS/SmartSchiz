@@ -87,11 +87,10 @@ import nodomain.freeyourgadget.gadgetbridge.GBApplication;
 import nodomain.freeyourgadget.gadgetbridge.R;
 import nodomain.freeyourgadget.gadgetbridge.activities.discovery.DiscoveryActivityV2;
 import nodomain.freeyourgadget.gadgetbridge.impl.GBDevice;
-import nodomain.freeyourgadget.gadgetbridge.model.ActivityKind;
 import nodomain.freeyourgadget.gadgetbridge.model.ActivitySample;
 import nodomain.freeyourgadget.gadgetbridge.model.DeviceService;
 import nodomain.freeyourgadget.gadgetbridge.model.RecordedDataTypes;
-import nodomain.freeyourgadget.gadgetbridge.service.DeviceCommunicationService;
+import nodomain.freeyourgadget.gadgetbridge.service.AlarmMonitoringService;
 import nodomain.freeyourgadget.gadgetbridge.util.AndroidUtils;
 import nodomain.freeyourgadget.gadgetbridge.util.DeviceHelper;
 import nodomain.freeyourgadget.gadgetbridge.util.GB;
@@ -176,6 +175,11 @@ public class ControlCenterv2 extends AppCompatActivity
         AbstractGBActivity.init(this, AbstractGBActivity.NO_ACTIONBAR);
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        Intent serviceIntent = new Intent(this, AlarmMonitoringService.class);
+        startService(serviceIntent);
+
+
+
 
         Prefs prefs = GBApplication.getPrefs();
 
@@ -390,6 +394,10 @@ public class ControlCenterv2 extends AppCompatActivity
         if (itemId == R.id.action_settings) {
             final Intent settingsIntent = new Intent(this, SettingsActivity.class);
             startActivityForResult(settingsIntent, MENU_REFRESH_CODE);
+            return false;
+        } else if (itemId == R.id.action_AlarmActivity) {
+            final Intent AlarmIntent = new Intent(this, AlarmActivity.class);
+            startActivity(AlarmIntent);
             return false;
         } else if (itemId == R.id.action_debug) {
             final Intent debugIntent = new Intent(this, DebugActivity.class);

@@ -19,11 +19,16 @@ package nodomain.freeyourgadget.gadgetbridge.service.devices.huami.operations.fe
 
 import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCharacteristic;
+import android.content.Intent;
 import android.content.SharedPreferences;
+import android.util.Log;
 import android.widget.Toast;
+
+import android.content.Context;
 
 import androidx.annotation.CallSuper;
 import androidx.annotation.NonNull;
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -190,6 +195,7 @@ public abstract class AbstractFetchOperation extends AbstractHuamiOperation {
             GB.toast("Error " + getName() + ", invalid package counter: " + value[0] + ", last was: " + lastPacketCounter, Toast.LENGTH_LONG, GB.ERROR);
             operationValid = false;
         }
+
     }
 
     protected void bufferActivityData(byte[] value) {
@@ -369,8 +375,17 @@ public abstract class AbstractFetchOperation extends AbstractHuamiOperation {
         calendar.add(Calendar.DAY_OF_MONTH, -100);
         return calendar;
     }
+        protected void onDataFetched(Context context) {
+            sendDataUpdatedBroadcast(context);
+        }
 
-    protected boolean isZeppOs() {
-        return getSupport() instanceof ZeppOsSupport;
-    }
+        protected boolean isZeppOs() {
+            return getSupport() instanceof ZeppOsSupport;
+        }
+
+        private void sendDataUpdatedBroadcast(Context context) {
+            Intent intent = new Intent("DATA_UPDATED");
+            LocalBroadcastManager.getInstance(context).sendBroadcast(intent);
+            Log.d("AbstractFetchOperation", "Broadcast sent: DATA_UPDATED");
+        }
 }

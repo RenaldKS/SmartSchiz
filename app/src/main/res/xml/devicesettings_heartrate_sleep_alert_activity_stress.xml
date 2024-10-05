@@ -43,6 +43,14 @@
             android:summary="@string/prefs_heartrate_alert_experimental_description"
             android:title="@string/prefs_heartrate_alert_experimental_title" />
 
+        <SwitchPreferenceCompat
+            android:defaultValue="false"
+            android:icon="@drawable/ic_warning_gray"
+            android:key="heartrate_alert_activity_monitoring"
+            android:layout="@layout/preference_checkbox"
+            android:summary="Heart Monitoring for Alarm Activity"
+            android:title="Heart Rate Monitoring" />
+
         <ListPreference
             android:defaultValue="0"
             android:dependency="heartrate_alert_enabled"

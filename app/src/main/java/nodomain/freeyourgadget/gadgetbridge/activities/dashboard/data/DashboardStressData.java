@@ -1,5 +1,7 @@
 package nodomain.freeyourgadget.gadgetbridge.activities.dashboard.data;
 
+import android.util.Log;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -25,15 +27,25 @@ public class DashboardStressData implements Serializable {
 
         GBDevice stressDevice = null;
         double averageStress = -1;
+        StressSample latestSample = null;
 
         final int[] totalTime = new int[StressChartFragment.StressType.values().length];
 
         try (DBHandler dbHandler = GBApplication.acquireDB()) {
             for (GBDevice dev : devices) {
-                if ((dashboardData.showAllDevices || dashboardData.showDeviceList.contains(dev.getAddress())) && dev.getDeviceCoordinator().supportsStressMeasurement()) {
+                Log.d("DashboardStressData", "Checking device: " + dev.getName());
+                if ((dashboardData.showAllDevices || (dashboardData.showDeviceList != null && dashboardData.showDeviceList.contains(dev.getAddress()))) && dev.getDeviceCoordinator().supportsStressMeasurement()) {
+                    Log.d("DashboardStressData", "Device supports stress measurement: " + dev.getName());
                     final List<? extends StressSample> samples = dev.getDeviceCoordinator()
                             .getStressSampleProvider(dev, dbHandler.getDaoSession())
                             .getAllSamples(dashboardData.timeFrom * 1000L, dashboardData.timeTo * 1000L);
+                    // Log the size of the samples list
+                    Log.d("DashboardStressData", "Fetched " + samples.size() + " stress samples.");
+
+                    // Log each stress sample value for debugging   
+                    for (StressSample sample : samples) {
+
+                    }
 
                     if (!samples.isEmpty()) {
                         stressDevice = dev;
@@ -48,7 +60,18 @@ public class DashboardStressData implements Serializable {
                                 })
                                 .average()
                                 .orElse(0);
+                        Log.d("DashboardStressData", "Average stress value: " + averageStress);  // NEW
                     }
+                    latestSample = dev.getDeviceCoordinator()
+                            .getStressSampleProvider(dev, dbHandler.getDaoSession())
+                            .getLatestSample();
+
+                    if (latestSample != null) {
+                        // Kirim semua nilai stres terbaru ke Log
+                        Log.d("DashboardStressData", "Latest stress value: " + latestSample.getStress());
+                    }
+                } else {
+                    Log.d("DashboardStressData", "Device does not support stress measurement: " + dev.getName());
                 }
             }
         } catch (final Exception e) {
@@ -62,6 +85,8 @@ public class DashboardStressData implements Serializable {
             stressData.totalTime = totalTime;
 
             return stressData;
+        }else {
+            Log.d("DashboardStressData", "No stress data available.");
         }
 
         return null;

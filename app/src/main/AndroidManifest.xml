@@ -166,10 +166,15 @@
             android:label="@string/title_activity_settings"
             android:parentActivityName=".activities.ControlCenterv2" />
         <activity
+            android:name=".activities.AlarmActivity"
+            android:label="@string/alarm_activity_label"
+            android:parentActivityName=".activities.ControlCenterv2" />
+
+        <activity
             android:name=".activities.DashboardPreferencesActivity"
             android:label="@string/dashboard_settings"
             android:parentActivityName=".activities.SettingsActivity" />
-        <activity
+        <activity   
             android:name=".activities.SleepAsAndroidPreferencesActivity"
             android:label="@string/sleepasandroid_settings"
             android:parentActivityName=".activities.SettingsActivity" />
@@ -468,6 +473,10 @@
             <intent-filter>
                 <action android:name="android.service.notification.NotificationListenerService" />
             </intent-filter>
+        </service>
+        <service
+            android:name=".service.AlarmMonitoringService"
+            android:exported="false">
         </service>
         <service
             android:name=".service.NotificationCollectorMonitorService"

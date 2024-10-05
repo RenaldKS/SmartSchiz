@@ -23,6 +23,7 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Bundle;
 import android.util.DisplayMetrics;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -128,8 +129,11 @@ public class DashboardFragment extends Fragment implements MenuProvider {
 
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+
         super.onCreateView(inflater, container, savedInstanceState);
+
         View dashboardView = inflater.inflate(R.layout.fragment_dashboard, container, false);
+
         requireActivity().addMenuProvider(this);
         textViewDate = dashboardView.findViewById(R.id.dashboard_date);
         gridLayout = dashboardView.findViewById(R.id.dashboard_gridlayout);
@@ -181,7 +185,16 @@ public class DashboardFragment extends Fragment implements MenuProvider {
         } else if (dashboardData.isEmpty() || !widgetMap.containsKey("today")) {
             refresh();
         }
+        LocalBroadcastManager.getInstance(requireContext()).registerReceiver(dataUpdateReceiver, new IntentFilter("DATA_UPDATED"));
+
     }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        LocalBroadcastManager.getInstance(requireContext()).registerReceiver(dataUpdateReceiver, new IntentFilter("DATA_UPDATED"));
+    }
+
 
     @Override
     public void onDestroy() {
@@ -222,7 +235,7 @@ public class DashboardFragment extends Fragment implements MenuProvider {
         refresh();
     }
 
-    private void refresh() {
+    public void refresh() {
         day.set(Calendar.HOUR_OF_DAY, 23);
         day.set(Calendar.MINUTE, 59);
         day.set(Calendar.SECOND, 59);
@@ -234,6 +247,8 @@ public class DashboardFragment extends Fragment implements MenuProvider {
         dashboardData.timeTo = (int) (day.getTimeInMillis() / 1000);
         dashboardData.timeFrom = DateTimeUtils.shiftDays(dashboardData.timeTo, -1);
         draw();
+        Log.d("DashboardFragment", "UI refreshed with new data");
+
     }
 
     private void draw() {
@@ -470,4 +485,11 @@ public class DashboardFragment extends Fragment implements MenuProvider {
             }
         }
     }
+    private final BroadcastReceiver dataUpdateReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            refresh(); // Refresh the dashboard when new data arrives
+            Log.d("DashboardFragment", "Data updated broadcast received");
+        };
+    };
 }

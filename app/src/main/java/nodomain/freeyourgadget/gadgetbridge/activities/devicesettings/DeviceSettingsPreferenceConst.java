@@ -193,6 +193,7 @@ public class DeviceSettingsPreferenceConst {
     public static final String PREF_HEARTRATE_ALERT_ACTIVE_HIGH_THRESHOLD = "heartrate_alert_active_high_threshold";
     public static final String PREF_HEARTRATE_ALERT_HIGH_THRESHOLD = "heartrate_alert_threshold";
     public static final String PREF_HEARTRATE_ALERT_LOW_THRESHOLD = "heartrate_alert_low_threshold";
+    public static final String PREF_HEARTRATE_ALERT_MONITORING = "heartrate_alert_activity_monitoring";
     public static final String PREF_HEARTRATE_STRESS_MONITORING = "heartrate_stress_monitoring";
     public static final String PREF_HEARTRATE_STRESS_RELAXATION_REMINDER = "heartrate_stress_relaxation_reminder";
     public static final String PREF_HEARTRATE_SLEEP_BREATHING_QUALITY_MONITORING = "heartrate_sleep_breathing_quality_monitoring";

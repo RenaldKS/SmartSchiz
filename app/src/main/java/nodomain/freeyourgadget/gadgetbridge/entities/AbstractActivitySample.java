@@ -20,7 +20,13 @@ import nodomain.freeyourgadget.gadgetbridge.devices.SampleProvider;
 import nodomain.freeyourgadget.gadgetbridge.model.ActivityKind;
 import nodomain.freeyourgadget.gadgetbridge.model.ActivitySample;
 import nodomain.freeyourgadget.gadgetbridge.util.DateTimeUtils;
+import nodomain.freeyourgadget.gadgetbridge.database.DBHandler;
+import nodomain.freeyourgadget.gadgetbridge.impl.GBDevice;
+import nodomain.freeyourgadget.gadgetbridge.model.StressSample;
+import nodomain.freeyourgadget.gadgetbridge.GBApplication;
+import android.util.Log;
 
+import java.util.List;
 public abstract class AbstractActivitySample implements ActivitySample {
     private SampleProvider<?> mProvider;
 
@@ -89,15 +95,49 @@ public abstract class AbstractActivitySample implements ActivitySample {
         return NOT_MEASURED;
     }
 
+    public StressSample getLatestSample() {
+        List<GBDevice> devices = GBApplication.app().getDeviceManager().getDevices();
+        StressSample latestSample = null;
+
+        try (DBHandler dbHandler = GBApplication.acquireDB()) {
+            for (GBDevice dev : devices) {
+                if (dev.getDeviceCoordinator().supportsStressMeasurement()) {
+                    latestSample = dev.getDeviceCoordinator()
+                            .getStressSampleProvider(dev, dbHandler.getDaoSession())
+                            .getLatestSample();
+
+                    // Log for debugging purposes
+                    if (latestSample != null) {
+                        Log.d("AbstractActivitySample", "Latest stress sample fetched: " + latestSample.getStress());
+                    }
+                }
+            }
+        } catch (Exception e) {
+            Log.e("AbstractActivitySample", "Error fetching latest sample", e);
+        }
+
+        return latestSample;
+    }
+
     @Override
     public String toString() {
+
+        StressSample latestSample = getLatestSample();  // Fetch the latest sample
         ActivityKind kind = getProvider() != null ? getKind() : ActivityKind.NOT_MEASURED;
         float intensity = getProvider() != null ? getIntensity() : ActivitySample.NOT_MEASURED;
+
+        String stressInfo = "";
+        if (latestSample != null) {
+            int stressLevel = latestSample.getStress();
+            stressInfo = ", stressLevel=" + stressLevel;
+        }
+
         return getClass().getSimpleName() + "{" +
                 "timestamp=" + DateTimeUtils.formatDateTime(DateTimeUtils.parseTimeStamp(getTimestamp())) +
                 ", intensity=" + intensity +
                 ", steps=" + getSteps() +
                 ", heartrate=" + getHeartRate() +
+                 stressInfo +
                 ", type=" + kind +
                 ", userId=" + getUserId() +
                 ", deviceId=" + getDeviceId() +
