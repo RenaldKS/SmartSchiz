@@ -148,6 +148,7 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
         <activity
             android:name=".activities.ControlCenterv2"
             android:label="@string/title_activity_controlcenter"
@@ -174,6 +175,9 @@
             android:name=".activities.DashboardPreferencesActivity"
             android:label="@string/dashboard_settings"
             android:parentActivityName=".activities.SettingsActivity" />
+        <activity android:name=".activities.ShowAlarmDataActivity"
+            android:parentActivityName=".activities.SettingsActivity"/>
+
         <activity   
             android:name=".activities.SleepAsAndroidPreferencesActivity"
             android:label="@string/sleepasandroid_settings"

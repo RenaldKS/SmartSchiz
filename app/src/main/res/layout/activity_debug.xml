@@ -58,6 +58,13 @@
                 grid:layout_columnSpan="2"
                 grid:layout_gravity="fill_horizontal"
                 android:text="Send" />
+            <Button
+                android:id="@+id/saveDataButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                grid:layout_columnSpan="2"
+                grid:layout_gravity="fill_horizontal"
+                android:text="Trigger Alarm" />
 
             <Button
                 android:id="@+id/incomingCallButton"

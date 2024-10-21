@@ -57,12 +57,12 @@ public class DashboardStressSimpleWidget extends AbstractGaugeWidget {
         }
 
         final int color = StressChartFragment.StressType.fromStress(
-                stressData.value,
+                stressData.latestStressValue,
                 stressData.ranges
         ).getColor(GBApplication.getContext());
 
-        final float value = stressData.value / 100f;
-        final String valueText = String.valueOf(stressData.value);
+        final float value = stressData.latestStressValue / 100f;
+        final String valueText = String.valueOf(stressData.latestStressValue);
 
         setText(valueText);
         drawSimpleGauge(color, value);

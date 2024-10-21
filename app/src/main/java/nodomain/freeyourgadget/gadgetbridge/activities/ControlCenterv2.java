@@ -395,8 +395,8 @@ public class ControlCenterv2 extends AppCompatActivity
             final Intent settingsIntent = new Intent(this, SettingsActivity.class);
             startActivityForResult(settingsIntent, MENU_REFRESH_CODE);
             return false;
-        } else if (itemId == R.id.action_AlarmActivity) {
-            final Intent AlarmIntent = new Intent(this, AlarmActivity.class);
+        } else if (itemId == R.id.action_ShowAlarmData) {
+            final Intent AlarmIntent = new Intent(this, ShowAlarmDataActivity.class);
             startActivity(AlarmIntent);
             return false;
         } else if (itemId == R.id.action_debug) {

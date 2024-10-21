@@ -129,7 +129,7 @@ public abstract class AbstractActivitySample implements ActivitySample {
         String stressInfo = "";
         if (latestSample != null) {
             int stressLevel = latestSample.getStress();
-            stressInfo = ", stressLevel=" + stressLevel;
+
         }
 
         return getClass().getSimpleName() + "{" +

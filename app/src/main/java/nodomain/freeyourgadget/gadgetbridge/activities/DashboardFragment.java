@@ -22,6 +22,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Bundle;
+import android.os.Handler;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -92,6 +93,8 @@ public class DashboardFragment extends Fragment implements MenuProvider {
     private final Map<String, AbstractDashboardWidget> widgetMap = new HashMap<>();
     private DashboardData dashboardData = new DashboardData();
     private boolean isConfigChanged = false;
+
+
 
     private ActivityResultLauncher<Intent> calendarLauncher;
     private final ActivityResultCallback<ActivityResult> calendarCallback = result -> {
@@ -175,7 +178,14 @@ public class DashboardFragment extends Fragment implements MenuProvider {
 
         return dashboardView;
     }
-
+    private Handler handler = new Handler();
+    private Runnable refreshRunnable = new Runnable() {
+        @Override
+        public void run() {
+            fullRefresh();
+            handler.postDelayed(this, 5 * 60 * 1000); // 5 minutes
+        }
+    };
     @Override
     public void onResume() {
         super.onResume();
@@ -186,7 +196,7 @@ public class DashboardFragment extends Fragment implements MenuProvider {
             refresh();
         }
         LocalBroadcastManager.getInstance(requireContext()).registerReceiver(dataUpdateReceiver, new IntentFilter("DATA_UPDATED"));
-
+        handler.post(refreshRunnable);
     }
 
     @Override
@@ -233,6 +243,7 @@ public class DashboardFragment extends Fragment implements MenuProvider {
         gridLayout.removeAllViews();
         widgetMap.clear();
         refresh();
+        Log.d("DashboardFragment", "Running full refresh");
     }
 
     public void refresh() {

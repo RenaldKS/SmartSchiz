@@ -4,7 +4,7 @@
     <group
         android:checkableBehavior="single"
         android:id="@+id/applicaction_options">
-        <item android:id="@+id/action_AlarmActivity"
+        <item android:id="@+id/action_ShowAlarmData"
             android:title="@string/action_AlarmActivity"
             android:icon="@drawable/ic_notifications" />
         <item android:id="@+id/action_settings"

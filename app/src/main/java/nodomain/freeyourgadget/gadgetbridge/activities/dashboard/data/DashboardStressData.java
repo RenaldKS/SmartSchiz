@@ -19,6 +19,7 @@ public class DashboardStressData implements Serializable {
     private static final Logger LOG = LoggerFactory.getLogger(DashboardStressData.class);
 
     public int value;
+    public int latestStressValue; // New field for latest stress value
     public int[] ranges;
     public int[] totalTime;
 
@@ -62,14 +63,14 @@ public class DashboardStressData implements Serializable {
                                 .orElse(0);
                         Log.d("DashboardStressData", "Average stress value: " + averageStress);  // NEW
                     }
-                    latestSample = dev.getDeviceCoordinator()
-                            .getStressSampleProvider(dev, dbHandler.getDaoSession())
-                            .getLatestSample();
+                        latestSample = dev.getDeviceCoordinator()
+                                .getStressSampleProvider(dev, dbHandler.getDaoSession())
+                                .getLatestSample();
 
-                    if (latestSample != null) {
-                        // Kirim semua nilai stres terbaru ke Log
-                        Log.d("DashboardStressData", "Latest stress value: " + latestSample.getStress());
-                    }
+                        if (latestSample != null) {
+                            // Kirim semua nilai stres terbaru ke Log
+                            Log.d("DashboardStressData", "Latest stress value: " + latestSample.getStress());
+                        }
                 } else {
                     Log.d("DashboardStressData", "Device does not support stress measurement: " + dev.getName());
                 }
@@ -83,11 +84,15 @@ public class DashboardStressData implements Serializable {
             stressData.value = (int) Math.round(averageStress);
             stressData.ranges = stressDevice.getDeviceCoordinator().getStressRanges();
             stressData.totalTime = totalTime;
-
+            // Assign latest stress value if available
+            if (latestSample != null) {
+                stressData.latestStressValue = latestSample.getStress();
+            }
             return stressData;
         }else {
             Log.d("DashboardStressData", "No stress data available.");
         }
+
 
         return null;
     }

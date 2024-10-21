@@ -49,6 +49,7 @@ import android.preference.PreferenceManager;
 import android.text.Editable;
 import android.text.TextUtils;
 import android.text.TextWatcher;
+import android.util.Log;
 import android.util.Pair;
 import android.view.MenuItem;
 import android.view.View;
@@ -76,6 +77,9 @@ import androidx.core.content.FileProvider;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.firestore.FirebaseFirestore;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -87,6 +91,7 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
@@ -233,6 +238,23 @@ public class DebugActivity extends AbstractGBActivity {
                 GBApplication.deviceService().onNotification(notificationSpec);
             }
         });
+        Button saveDataButton = findViewById(R.id.saveDataButton);
+        saveDataButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                // Example values for heart rate, stress level, and timestamp
+                int heartRate = 85;  // You can replace this with dynamic values if needed
+                int stressLevel = 65;  // Replace this with real stress level data
+                long timestamp = System.currentTimeMillis();
+
+                // Call the method to save data to Firestore
+                saveDataToFirestore(heartRate, stressLevel, timestamp);
+            }
+        });
+
+
+
+
 
         Button incomingCallButton = findViewById(R.id.incomingCallButton);
         incomingCallButton.setOnClickListener(new View.OnClickListener() {
@@ -772,6 +794,39 @@ public class DebugActivity extends AbstractGBActivity {
                 getApplicationContext().startActivity(cameraIntent);
             }
         });
+    }
+
+    private void saveDataToFirestore(int heartRate, int stressLevel, long timestamp) {
+        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+
+        if (user != null) {  // Ensure the user is authenticated
+            String formattedTimestamp = formatTimestamp(timestamp);
+
+            // Create a data map for Firestore
+            Map<String, Object> dataMap = new HashMap<>();
+            dataMap.put("timestamp", formattedTimestamp);
+            dataMap.put("heartRate", heartRate);
+            dataMap.put("stressLevel", stressLevel);
+            dataMap.put("userId", user.getUid());  // Store user ID
+
+            // Save data to Firestore
+            FirebaseFirestore db = FirebaseFirestore.getInstance();
+            db.collection("alarmData")
+                    .add(dataMap)
+                    .addOnSuccessListener(documentReference -> {
+                        Log.d("DebugActivity", "Data successfully written with ID: " + documentReference.getId());
+                    })
+                    .addOnFailureListener(e -> {
+                        Log.w("DebugActivity", "Error writing document", e);
+                    });
+        } else {
+            Log.w("DebugActivity", "User not authenticated, cannot write to Firestore");
+        }
+    }
+
+    private String formatTimestamp(long timestamp) {
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault());
+        return sdf.format(new Date(timestamp));  // Format the timestamp as a readable date and time
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
