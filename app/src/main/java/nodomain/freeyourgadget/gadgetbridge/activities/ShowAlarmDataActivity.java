@@ -81,7 +81,6 @@ public class ShowAlarmDataActivity extends AppCompatActivity {
     private void fetchAlarmData(String currentUserId) {
         FirebaseFirestore db = FirebaseFirestore.getInstance();
 
-        // Step 1: Get the user's email from authentication
         FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
         if (user == null) {
             Toast.makeText(this, "User not authenticated", Toast.LENGTH_SHORT).show();
@@ -90,68 +89,66 @@ public class ShowAlarmDataActivity extends AppCompatActivity {
         }
 
         String email = user.getEmail();
-
-        if (email != null) {
-            // Step 2: Find the username corresponding to the email
-            db.collection("users")
-                    .whereEqualTo("email", email)
-                    .get()
-                    .addOnCompleteListener(task -> {
-                        if (task.isSuccessful() && !task.getResult().isEmpty()) {
-                            // Step 3: Get the username from the document ID
-                            String username = task.getResult().getDocuments().get(0).getId();
-
-                            // Step 4: Fetch alarm data using the username
-                            db.collection("alarmData")
-                                    .document(username)
-                                    .collection("entries")
-                                    .get()
-                                    .addOnCompleteListener(fetchTask -> {
-                                        if (fetchTask.isSuccessful()) {
-                                            QuerySnapshot querySnapshot = fetchTask.getResult();
-                                            if (!querySnapshot.isEmpty()) {
-                                                List<String> alarmDataList = new ArrayList<>();
-                                                for (QueryDocumentSnapshot document : querySnapshot) {
-                                                    String timestamp = document.getString("timestamp");
-                                                    Long heartRate = document.getLong("heartRate");
-                                                    Long stressLevel = document.getLong("stressLevel");
-                                                    String locationLink = document.getString("locationLink");
-
-                                                    if (heartRate != null && stressLevel != null) {
-                                                        String alarmData = "Timestamp: " + timestamp +
-                                                                "\nHeart Rate: " + heartRate +
-                                                                "\nStress Level: " + stressLevel;
-                                                        if (locationLink != null) {
-                                                            alarmData += "\nLocation: " + locationLink;
-                                                        }
-                                                        alarmDataList.add(alarmData);
-                                                    }
-                                                }
-                                                displayAlarmData(alarmDataList);
-                                            } else {
-                                                Log.d(TAG, "No alarm data found for username: " + username);
-                                                Toast.makeText(this, "No alarm data found", Toast.LENGTH_SHORT).show();
-                                            }
-                                        } else {
-                                            Log.w(TAG, "Error getting documents: ", fetchTask.getException());
-                                            Toast.makeText(this, "Error fetching data", Toast.LENGTH_SHORT).show();
-                                        }
-                                    });
-                        } else {
-                            Log.w(TAG, "Username not found for email: " + email);
-                            Toast.makeText(this, "User not found", Toast.LENGTH_SHORT).show();
-                        }
-                    })
-                    .addOnFailureListener(e -> {
-                        Log.e(TAG, "Failed to query username", e);
-                        Toast.makeText(this, "Error finding user", Toast.LENGTH_SHORT).show();
-                    });
-        } else {
+        if (email == null) {
             Log.w(TAG, "User email is null");
             Toast.makeText(this, "User email not found", Toast.LENGTH_SHORT).show();
+            return;
         }
-    }
 
+        // Fetch the username from Firestore
+        db.collection("users")
+                .whereEqualTo("email", email)
+                .get()
+                .addOnCompleteListener(task -> {
+                    if (task.isSuccessful() && !task.getResult().isEmpty()) {
+                        String username = task.getResult().getDocuments().get(0).getId();
+
+                        // Query alarmData -> username -> data
+                        db.collection("alarmData")
+                                .document(username)
+                                .collection("data")
+                                .get()
+                                .addOnCompleteListener(fetchTask -> {
+                                    if (fetchTask.isSuccessful()) {
+                                        QuerySnapshot querySnapshot = fetchTask.getResult();
+                                        if (!querySnapshot.isEmpty()) {
+                                            List<String> alarmDataList = new ArrayList<>();
+                                            for (QueryDocumentSnapshot document : querySnapshot) {
+                                                String timestamp = document.getString("timestamp");
+                                                Long heartRate = document.getLong("heartRate");
+                                                Long stressLevel = document.getLong("stressLevel");
+                                                String locationLink = document.getString("locationLink");
+
+                                                if (heartRate != null && stressLevel != null) {
+                                                    String alarmData = "Timestamp: " + timestamp +
+                                                            "\nHeart Rate: " + heartRate +
+                                                            "\nStress Level: " + stressLevel;
+                                                    if (locationLink != null) {
+                                                        alarmData += "\nLocation: " + locationLink;
+                                                    }
+                                                    alarmDataList.add(alarmData);
+                                                }
+                                            }
+                                            displayAlarmData(alarmDataList);
+                                        } else {
+                                            Log.d(TAG, "No alarm data found for username: " + username);
+                                            Toast.makeText(this, "No alarm data found", Toast.LENGTH_SHORT).show();
+                                        }
+                                    } else {
+                                        Log.w(TAG, "Error getting documents: ", fetchTask.getException());
+                                        Toast.makeText(this, "Error fetching data", Toast.LENGTH_SHORT).show();
+                                    }
+                                });
+                    } else {
+                        Log.w(TAG, "Username not found for email: " + email);
+                        Toast.makeText(this, "User not found", Toast.LENGTH_SHORT).show();
+                    }
+                })
+                .addOnFailureListener(e -> {
+                    Log.e(TAG, "Failed to query username", e);
+                    Toast.makeText(this, "Error finding user", Toast.LENGTH_SHORT).show();
+                });
+    }
 
 
     private void displayAlarmData(List<String> alarmDataList) {
@@ -218,41 +215,40 @@ public class ShowAlarmDataActivity extends AppCompatActivity {
     }
 
 
-    private void sendConnectionRequest(String targetUserEmail) {
+    private void sendConnectionRequest(String targetEmailOrUsername) {
         FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
         if (user != null) {
             String requesterId = user.getUid();
             FirebaseFirestore db = FirebaseFirestore.getInstance();
 
-            // Step 1: Lookup the UID of the target user by their email
+            // Step 1: Look up the user by email or username
             db.collection("users")
-                    .whereEqualTo("email", targetUserEmail)
+                    .whereEqualTo("email", targetEmailOrUsername) // Try looking by email first
                     .get()
                     .addOnCompleteListener(task -> {
                         if (task.isSuccessful() && !task.getResult().isEmpty()) {
-                            // Found the target user, retrieve their UID
+                            // Found the target user by email, retrieve their UID
                             String targetUserId = task.getResult().getDocuments().get(0).getId();
-
-                            // Step 2: Create the connection request with targetUserId
-                            Map<String, Object> request = new HashMap<>();
-                            request.put("requesterId", requesterId);
-                            request.put("targetUserId", targetUserId);  // Store UID instead of email
-                            request.put("status", "pending");
-                            request.put("timestamp", FieldValue.serverTimestamp());
-
-                            db.collection("connectionRequests")
-                                    .add(request)
-                                    .addOnSuccessListener(documentReference -> {
-                                        Log.d(TAG, "Connection request sent successfully");
-                                        Toast.makeText(this, "Request sent successfully", Toast.LENGTH_SHORT).show();
+                            sendConnectionRequestToFirestore(requesterId, targetUserId);
+                        } else {
+                            // If email lookup fails, try username lookup
+                            db.collection("users")
+                                    .whereEqualTo("username", targetEmailOrUsername) // Fallback to username lookup
+                                    .get()
+                                    .addOnCompleteListener(task2 -> {
+                                        if (task2.isSuccessful() && !task2.getResult().isEmpty()) {
+                                            // Found the target user by username, retrieve their UID
+                                            String targetUserId = task2.getResult().getDocuments().get(0).getId();
+                                            sendConnectionRequestToFirestore(requesterId, targetUserId);
+                                        } else {
+                                            Log.w(TAG, "No user found with email or username: " + targetEmailOrUsername);
+                                            Toast.makeText(this, "No user found with that email or username", Toast.LENGTH_SHORT).show();
+                                        }
                                     })
                                     .addOnFailureListener(e -> {
-                                        Log.w(TAG, "Failed to send connection request", e);
-                                        Toast.makeText(this, "Failed to send request", Toast.LENGTH_SHORT).show();
+                                        Log.w(TAG, "Failed to query user by username", e);
+                                        Toast.makeText(this, "Error finding target user", Toast.LENGTH_SHORT).show();
                                     });
-                        } else {
-                            Log.w(TAG, "No user found with email: " + targetUserEmail);
-                            Toast.makeText(this, "No user found with that email", Toast.LENGTH_SHORT).show();
                         }
                     })
                     .addOnFailureListener(e -> {
@@ -262,4 +258,25 @@ public class ShowAlarmDataActivity extends AppCompatActivity {
         }
     }
 
+    // Helper method to send the request after looking up the target user
+    private void sendConnectionRequestToFirestore(String requesterId, String targetUserId) {
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+
+        Map<String, Object> request = new HashMap<>();
+        request.put("requesterId", requesterId);
+        request.put("targetUserId", targetUserId); // Store UID instead of email
+        request.put("status", "pending");
+        request.put("timestamp", FieldValue.serverTimestamp());
+
+        db.collection("connectionRequests")
+                .add(request)
+                .addOnSuccessListener(documentReference -> {
+                    Log.d(TAG, "Connection request sent successfully");
+                    Toast.makeText(this, "Request sent successfully", Toast.LENGTH_SHORT).show();
+                })
+                .addOnFailureListener(e -> {
+                    Log.w(TAG, "Failed to send connection request", e);
+                    Toast.makeText(this, "Failed to send request", Toast.LENGTH_SHORT).show();
+                });
+    }
 }

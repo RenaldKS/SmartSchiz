@@ -850,7 +850,7 @@ public class DebugActivity extends AbstractGBActivity {
                                             // Save the data under the correct path
                                             db.collection("alarmData")
                                                     .document(username) // Use username as the document ID
-                                                    .collection("data") // Create a collection named "data" under the username
+                                                        .collection("data") // Create a collection named "data" under the username
                                                     .add(dataMap) // Add the data with a unique document ID
                                                     .addOnSuccessListener(documentReference -> {
                                                         Log.d("DebugActivity", "Data successfully written with ID: " + documentReference.getId());
@@ -878,15 +878,8 @@ public class DebugActivity extends AbstractGBActivity {
     }
 
 
-
-
-
-
-
-
-
     private String formatTimestamp(long timestamp) {
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault());
+        SimpleDateFormat sdf = new SimpleDateFormat("EEEE, dd-MM-yyyy, HH:mm:ss", Locale.getDefault());
         return sdf.format(new Date(timestamp));  // Format the timestamp as a readable date and time
     }
 

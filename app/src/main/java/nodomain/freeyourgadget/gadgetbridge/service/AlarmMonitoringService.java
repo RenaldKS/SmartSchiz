@@ -11,6 +11,7 @@ import android.content.pm.PackageManager;
 import android.location.Location;
 import android.os.IBinder;
 import android.util.Log;
+import android.widget.Toast;
 
 import androidx.core.app.ActivityCompat;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
@@ -126,37 +127,74 @@ public class AlarmMonitoringService extends Service {
         FirebaseFirestore db = FirebaseFirestore.getInstance();
         String formattedTimestamp = formatTimestamp(timestamp);
 
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
-                != PackageManager.PERMISSION_GRANTED &&
-                ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION)
-                        != PackageManager.PERMISSION_GRANTED) {
-            Log.w(TAG, "Location permissions are not granted, skipping location data");
-            return;
-        }
+        // Query Firestore "users" collection to find the user document based on UID
+        db.collection("users")
+                .whereEqualTo("UID", userId) // Use UID field to find the user document
+                .get()
+                .addOnSuccessListener(queryDocumentSnapshots -> {
+                    if (!queryDocumentSnapshots.isEmpty()) {
+                        // Retrieve the username from the query results
+                        String username = queryDocumentSnapshots.getDocuments().get(0).getString("username");
 
-        fusedLocationClient.getLastLocation()
-                .addOnSuccessListener(location -> {
-                    Map<String, Object> alarmData = new HashMap<>();
-                    alarmData.put("timestamp", formattedTimestamp);
-                    alarmData.put("heartRate", heartRate);
-                    alarmData.put("stressLevel", stressLevel);
+                        if (username != null) {
+                            // Check location permissions
+                            if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
+                                    != PackageManager.PERMISSION_GRANTED &&
+                                    ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION)
+                                            != PackageManager.PERMISSION_GRANTED) {
+                                Log.w(TAG, "Location permissions are not granted, skipping location data");
+                                return;
+                            }
 
-                    if (location != null) {
-                        String mapsLink = "https://www.google.com/maps?q=" + location.getLatitude() + "," + location.getLongitude();
-                        alarmData.put("locationLink", mapsLink);
+                            // Fetch location and save data
+                            fusedLocationClient.getLastLocation()
+                                    .addOnSuccessListener(location -> {
+                                        Map<String, Object> alarmData = new HashMap<>();
+                                        alarmData.put("timestamp", formattedTimestamp);
+                                        alarmData.put("heartRate", heartRate);
+                                        alarmData.put("stressLevel", stressLevel);
+
+                                        if (location != null) {
+                                            String mapsLink = "https://www.google.com/maps?q=" + location.getLatitude() + "," + location.getLongitude();
+                                            alarmData.put("locationLink", mapsLink);
+                                        } else {
+                                            Log.w(TAG, "Location data is unavailable");
+                                        }
+
+                                        // Save data to Firestore using username as the document ID
+                                        db.collection("alarmData")
+                                                .document(username) // Use username as the parent document
+                                                .collection("data") // Store the data in the "data" subcollection
+                                                .add(alarmData) // Add the data with a unique document ID
+                                                .addOnSuccessListener(documentReference -> {
+                                                    Log.d(TAG, "Data written successfully with ID: " + documentReference.getId());
+                                                    Toast.makeText(this, "Alarm data saved successfully", Toast.LENGTH_SHORT).show();
+                                                })
+                                                .addOnFailureListener(e -> {
+                                                    Log.w(TAG, "Failed to write document to Firestore", e);
+                                                    Toast.makeText(this, "Failed to save alarm data", Toast.LENGTH_SHORT).show();
+                                                });
+
+                                    })
+                                    .addOnFailureListener(e -> {
+                                        Log.e(TAG, "Failed to fetch location", e);
+                                        Toast.makeText(this, "Failed to fetch location data", Toast.LENGTH_SHORT).show();
+                                    });
+                        } else {
+                            Log.w(TAG, "Username not found");
+                        }
                     } else {
-                        Log.w(TAG, "Location data is unavailable");
+                        Log.w(TAG, "No user document found for UID");
                     }
-
-                    db.collection("alarmData").document(userId).collection("entries").add(alarmData)
-                            .addOnSuccessListener(documentReference -> Log.d(TAG, "Data written successfully with ID: " + documentReference.getId()))
-                            .addOnFailureListener(e -> Log.w(TAG, "Failed to write document to Firestore", e));
                 })
-                .addOnFailureListener(e -> Log.e(TAG, "Failed to fetch location", e));
+                .addOnFailureListener(e -> {
+                    Log.w(TAG, "Error fetching user data", e);
+                    Toast.makeText(this, "Failed to retrieve user data", Toast.LENGTH_SHORT).show();
+                });
     }
 
     private String formatTimestamp(long timestamp) {
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault());
+        SimpleDateFormat sdf = new SimpleDateFormat("EEEE, dd-MM-yyyy, HH:mm:ss", Locale.getDefault());
         return sdf.format(new Date(timestamp));
     }
 
