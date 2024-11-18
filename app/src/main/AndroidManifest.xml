@@ -170,6 +170,13 @@
             android:name=".activities.AlarmActivity"
             android:label="@string/alarm_activity_label"
             android:parentActivityName=".activities.ControlCenterv2" />
+        <activity
+            android:name=".activities.PendingRequestActivity"
+            android:label="@string/alarm_activity_label"
+            android:parentActivityName=".activities.AlarmActivity" />
+
+        <activity android:name=".activities.ConnectedAccountActivity" />
+
 
         <activity
             android:name=".activities.DashboardPreferencesActivity"

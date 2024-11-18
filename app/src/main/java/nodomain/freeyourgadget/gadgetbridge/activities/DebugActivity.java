@@ -22,6 +22,7 @@ package nodomain.freeyourgadget.gadgetbridge.activities;
 import static android.content.Intent.EXTRA_SUBJECT;
 import static nodomain.freeyourgadget.gadgetbridge.util.GB.NOTIFICATION_CHANNEL_ID;
 
+import android.Manifest;
 import android.app.Activity;
 import android.app.DatePickerDialog;
 import android.app.PendingIntent;
@@ -41,6 +42,8 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.IntentSender;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
+import android.location.Location;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -76,10 +79,13 @@ import androidx.core.content.ContextCompat;
 import androidx.core.content.FileProvider;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.android.gms.location.LocationServices;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -139,7 +145,7 @@ public class DebugActivity extends AbstractGBActivity {
     private static final Logger LOG = LoggerFactory.getLogger(DebugActivity.class);
 
     private static Bundle dataLossSave;
-
+    private FusedLocationProviderClient fusedLocationClient;
     private static final String EXTRA_REPLY = "reply";
     private static final String ACTION_REPLY
             = "nodomain.freeyourgadget.gadgetbridge.DebugActivity.action.reply";
@@ -182,7 +188,7 @@ public class DebugActivity extends AbstractGBActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_debug);
-
+        fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
         IntentFilter filter = new IntentFilter();
         filter.addAction(ACTION_REPLY);
         filter.addAction(DeviceService.ACTION_REALTIME_SAMPLES);
@@ -800,29 +806,84 @@ public class DebugActivity extends AbstractGBActivity {
         FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
 
         if (user != null) {  // Ensure the user is authenticated
-            String formattedTimestamp = formatTimestamp(timestamp);
+            String userUID = user.getUid();
 
-            // Create a data map for Firestore
-            Map<String, Object> dataMap = new HashMap<>();
-            dataMap.put("timestamp", formattedTimestamp);
-            dataMap.put("heartRate", heartRate);
-            dataMap.put("stressLevel", stressLevel);
-            dataMap.put("userId", user.getUid());  // Store user ID
-
-            // Save data to Firestore
             FirebaseFirestore db = FirebaseFirestore.getInstance();
-            db.collection("alarmData")
-                    .add(dataMap)
-                    .addOnSuccessListener(documentReference -> {
-                        Log.d("DebugActivity", "Data successfully written with ID: " + documentReference.getId());
+            db.collection("users")
+                    .whereEqualTo("UID", userUID)
+                    .get()
+                    .addOnSuccessListener(queryDocumentSnapshots -> {
+                        if (!queryDocumentSnapshots.isEmpty()) {
+                            // Retrieve the username from the query results
+                            String username = queryDocumentSnapshots.getDocuments().get(0).getString("username");
+
+                            if (username != null) {
+                                String formattedTimestamp = formatTimestamp(timestamp);
+
+                                // Prepare data map
+                                Map<String, Object> dataMap = new HashMap<>();
+                                dataMap.put("timestamp", formattedTimestamp);
+                                dataMap.put("heartRate", heartRate);
+                                dataMap.put("stressLevel", stressLevel);
+
+                                // Get the last known location
+                                if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                                    // TODO: Consider calling
+                                    //    ActivityCompat#requestPermissions
+                                    // here to request the missing permissions, and then overriding
+                                    //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+                                    //                                          int[] grantResults)
+                                    // to handle the case where the user grants the permission. See the documentation
+                                    // for ActivityCompat#requestPermissions for more details.
+                                    return;
+                                }
+                                fusedLocationClient.getLastLocation()
+                                        .addOnSuccessListener(location -> {
+                                            if (location != null) {
+                                                // Add location data to Firestore
+                                                String mapsLink = "https://www.google.com/maps?q=" + location.getLatitude() + "," + location.getLongitude();
+                                                dataMap.put("locationLink", mapsLink);
+                                            } else {
+                                                Log.w("DebugActivity", "Location is null, skipping location data");
+                                            }
+
+                                            // Save the data under the correct path
+                                            db.collection("alarmData")
+                                                    .document(username) // Use username as the document ID
+                                                    .collection("data") // Create a collection named "data" under the username
+                                                    .add(dataMap) // Add the data with a unique document ID
+                                                    .addOnSuccessListener(documentReference -> {
+                                                        Log.d("DebugActivity", "Data successfully written with ID: " + documentReference.getId());
+                                                    })
+                                                    .addOnFailureListener(e -> {
+                                                        Log.w("DebugActivity", "Error writing document", e);
+                                                    });
+
+
+                                        })
+                                        .addOnFailureListener(e -> Log.w("DebugActivity", "Failed to retrieve location", e));
+                            } else {
+                                Log.w("DebugActivity", "Username not found for UID");
+                            }
+                        } else {
+                            Log.w("DebugActivity", "No user document found for UID");
+                        }
                     })
                     .addOnFailureListener(e -> {
-                        Log.w("DebugActivity", "Error writing document", e);
+                        Log.w("DebugActivity", "Failed to retrieve username", e);
                     });
         } else {
             Log.w("DebugActivity", "User not authenticated, cannot write to Firestore");
         }
     }
+
+
+
+
+
+
+
+
 
     private String formatTimestamp(long timestamp) {
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault());

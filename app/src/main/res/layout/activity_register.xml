@@ -4,29 +4,42 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:background="@color/primary_dark"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    tools:context=".RegisterActivity">
 
     <LinearLayout
         android:id="@+id/square"
-        android:layout_width="300dp"
-        android:layout_height="300dp"
-        android:background="@color/primarytext_dark"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
         android:orientation="vertical"
         android:padding="16dp"
+        android:background="@color/primarytext_dark"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.495"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.447">
+        app:layout_constraintVertical_bias="0.4"
+        android:gravity="center">
 
         <TextView
             android:id="@+id/Register"
-            android:layout_width="match_parent"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Register"
             android:textColor="@color/primarytext_light"
-            android:textSize="18sp" />
+            android:textSize="22sp"
+            android:layout_marginBottom="16dp"
+            android:gravity="center"/>
+
+        <!-- Username EditText -->
+        <EditText
+            android:id="@+id/username"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Username"
+            android:inputType="textPersonName"
+            android:padding="10dp"
+            android:layout_marginBottom="10dp"/>
 
         <EditText
             android:id="@+id/email"
@@ -34,7 +47,8 @@
             android:layout_height="wrap_content"
             android:hint="Email"
             android:inputType="textEmailAddress"
-            android:padding="10dp"/>
+            android:padding="10dp"
+            android:layout_marginBottom="10dp"/>
 
         <EditText
             android:id="@+id/password"
@@ -42,7 +56,8 @@
             android:layout_height="wrap_content"
             android:hint="Password"
             android:inputType="textPassword"
-            android:padding="10dp"/>
+            android:padding="10dp"
+            android:layout_marginBottom="10dp"/>
 
         <EditText
             android:id="@+id/confirm_password"
@@ -50,7 +65,8 @@
             android:layout_height="wrap_content"
             android:hint="Confirm Password"
             android:inputType="textPassword"
-            android:padding="10dp"/>
+            android:padding="10dp"
+            android:layout_marginBottom="20dp"/>
 
         <Button
             android:id="@+id/register_button"
@@ -58,14 +74,18 @@
             android:layout_height="wrap_content"
             android:text="Register"
             android:padding="10dp"
-            android:layout_marginTop="20dp"/>
+            android:layout_marginBottom="16dp"
+            android:textColor="@color/primarytext_dark"
+            android:background="@color/primary_light"/>
 
         <Button
             android:id="@+id/back_button"
-            android:layout_width="99dp"
-            android:layout_height="35dp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Back"
             android:layout_marginTop="10dp"
-            android:text="Back" />
+            android:textColor="@color/primarytext_light"
+            android:background="@color/primary_light"/>
 
     </LinearLayout>
 

@@ -178,14 +178,7 @@ public class DashboardFragment extends Fragment implements MenuProvider {
 
         return dashboardView;
     }
-    private Handler handler = new Handler();
-    private Runnable refreshRunnable = new Runnable() {
-        @Override
-        public void run() {
-            fullRefresh();
-            handler.postDelayed(this, 5 * 60 * 1000); // 5 minutes
-        }
-    };
+
     @Override
     public void onResume() {
         super.onResume();
@@ -196,7 +189,7 @@ public class DashboardFragment extends Fragment implements MenuProvider {
             refresh();
         }
         LocalBroadcastManager.getInstance(requireContext()).registerReceiver(dataUpdateReceiver, new IntentFilter("DATA_UPDATED"));
-        handler.post(refreshRunnable);
+
     }
 
     @Override

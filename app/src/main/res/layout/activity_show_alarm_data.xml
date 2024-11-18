@@ -6,16 +6,61 @@
     android:padding="16dp">
 
     <TextView
-        android:id="@+id/alarmDataTextView"
-        android:layout_width="match_parent"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Alarm Data"
         android:textSize="18sp"
-        android:textStyle="bold"
-        android:layout_marginBottom="16dp"/>
+        android:layout_gravity="center"
+        android:paddingBottom="8dp"/>
 
-    <ListView
-        android:id="@+id/alarmDataListView"
+    <!-- Scrollable box for data entries -->
+    <ScrollView
         android:layout_width="match_parent"
-        android:layout_height="wrap_content" />
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:background="#EFEFEF"
+        android:padding="8dp"
+        android:scrollbars="vertical">
+
+        <LinearLayout
+            android:id="@+id/dataContainer"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+            <!-- Data entries will be added programmatically here -->
+        </LinearLayout>
+    </ScrollView>
+
+    <!-- Button to send connection request -->
+    <Button
+        android:id="@+id/sendRequestButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Send Connection Request"
+        android:layout_marginTop="16dp"/>
+
+    <!-- Button to switch data -->
+    <Button
+        android:id="@+id/switchUserButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Switch User Data"
+        android:layout_marginTop="8dp"/>
+
+    <!-- Button to view pending requests -->
+    <Button
+        android:id="@+id/viewPendingRequestButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="View Pending Requests"
+        android:layout_marginTop="8dp"/>
+    <!-- Add this to your activity_show_alarm_data.xml -->
+    <Button
+        android:id="@+id/viewConnectedAccountsButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="View Connected Accounts"
+        android:layout_marginTop="16dp"
+        android:layout_gravity="center_horizontal"/>
+
 </LinearLayout>

@@ -17,15 +17,12 @@ import androidx.core.content.ContextCompat;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.FirebaseFirestore;
-import com.google.firebase.firestore.DocumentReference;
-import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.SetOptions;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.Locale;
-
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 
 import nodomain.freeyourgadget.gadgetbridge.R;
@@ -40,7 +37,7 @@ public class LoginActivity extends Activity {
     private Button loginButton;
     private Button registerButton;
     private FirebaseAuth mAuth;
-    private FirebaseFirestore db; // Firestore instancee
+    private FirebaseFirestore db; // Firestore instance
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -74,8 +71,6 @@ public class LoginActivity extends Activity {
             ActivityCompat.requestPermissions(this,
                     new String[]{Manifest.permission.INTERNET},
                     INTERNET_PERMISSION_REQUEST_CODE);
-        } else {
-            // Permission already granted, you can proceed with network-related tasks
         }
     }
 
@@ -92,11 +87,15 @@ public class LoginActivity extends Activity {
                         if (user != null) {
                             Log.d(TAG, "signInWithEmail:success. User ID: " + user.getUid());
 
-                            // Example: Save user data to Firestore
+                            // Save user data to Firestore
                             saveUserToFirestore(user);
+
+                            // Show welcome toast
+                            Toast.makeText(LoginActivity.this, "Welcome, " + user.getEmail(), Toast.LENGTH_SHORT).show();
 
                             // Navigate to next activity
                             startActivity(new Intent(LoginActivity.this, ControlCenterv2.class));
+                            finish();  // Close the login activity
                         }
                     } else {
                         Log.w(TAG, "signInWithEmail:failure", task.getException());
@@ -105,31 +104,31 @@ public class LoginActivity extends Activity {
                     }
                 });
     }
+
     private void saveUserToFirestore(FirebaseUser user) {
+        // Extract user's email and username
+        String email = user.getEmail();
+        String username = email != null ? email.split("@")[0] : "unknown"; // Use part of email as username
+
         // Create a user data map
-
         Map<String, Object> userData = new HashMap<>();
-        userData.put("Email", user.getEmail());
         userData.put("UID", user.getUid());
+        userData.put("email", email);
 
-        // Format the current time as Day and Time
-        SimpleDateFormat sdf = new SimpleDateFormat("EEEE, dd MMM yyyy HH:mm:ss", Locale.getDefault());
-        String formattedLastLogin = sdf.format(new Date());  // Formats to "Monday, 14 Oct 2024 15:45:30"
+        // Format the current time as "Day, DD-MM-YYYY, HH:mm:ss"
+        SimpleDateFormat sdf = new SimpleDateFormat("EEEE, dd-MM-yyyy, HH:mm:ss", Locale.getDefault());
+        String formattedLastLogin = sdf.format(new Date());
 
-        userData.put("Last Login", formattedLastLogin);  // Store formatted day and time
+        userData.put("lastLogin", formattedLastLogin); // Add formatted timestamp
 
-
-        // Save user data to Firestore under "users" collection
+        // Save data to Firestore under the updated structure
         db.collection("users")
-                .document(user.getUid())
-                .set(userData, SetOptions.merge()) // Merge to prevent overwriting existing data
-                .addOnSuccessListener(aVoid -> {
-                    Log.d(TAG, "User data successfully written to Firestore.");
-                })
-                .addOnFailureListener(e -> {
-                    Log.w(TAG, "Error writing user data to Firestore", e);
-                });
+                .document(username) // Use username as document ID
+                .set(userData, SetOptions.merge()) // Directly store user data under the username document
+                .addOnSuccessListener(aVoid -> Log.d(TAG, "User data successfully written to Firestore."))
+                .addOnFailureListener(e -> Log.w(TAG, "Error writing user data to Firestore", e));
     }
+
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {

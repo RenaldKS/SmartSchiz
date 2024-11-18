@@ -1,22 +1,32 @@
 package nodomain.freeyourgadget.gadgetbridge.service;
 
+import android.Manifest;
 import android.app.Service;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
+import android.location.Location;
 import android.os.IBinder;
 import android.util.Log;
+
+import androidx.core.app.ActivityCompat;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
+
+import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.android.gms.location.LocationServices;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.FirebaseFirestore;
+
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
+
 import nodomain.freeyourgadget.gadgetbridge.activities.AlarmActivity;
 import nodomain.freeyourgadget.gadgetbridge.model.ActivitySample;
 import nodomain.freeyourgadget.gadgetbridge.model.DeviceService;
@@ -30,13 +40,14 @@ public class AlarmMonitoringService extends Service {
     private static final String PREFS_NAME = "AlarmPreferences";
     private static final String PREF_ALARM_TRIGGERED = "isAlarmTriggered";
 
+    private FusedLocationProviderClient fusedLocationClient;
+
     private final BroadcastReceiver mReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
             if (DeviceService.ACTION_REALTIME_SAMPLES.equals(intent.getAction())) {
                 Log.d(TAG, "Received ACTION_REALTIME_SAMPLES intent");
 
-                // Handle heart rate and stress separately
                 if (intent.hasExtra(DeviceService.EXTRA_REALTIME_SAMPLE)) {
                     Object sample = intent.getSerializableExtra(DeviceService.EXTRA_REALTIME_SAMPLE);
 
@@ -44,21 +55,11 @@ public class AlarmMonitoringService extends Service {
                         ActivitySample activitySample = (ActivitySample) sample;
                         int heartRate = activitySample.getHeartRate();
                         long timestamp = System.currentTimeMillis();
-                        String formattedTimestamp = formatTimestamp(timestamp);
-
-                        Log.d(TAG, "Heart rate received: " + heartRate);
-                        Log.d(TAG, "Timestamp: " + formattedTimestamp);
-
                         handleAbnormalHeartRate(heartRate, timestamp);
                     } else if (sample instanceof StressSample) {
                         StressSample stressSample = (StressSample) sample;
                         int stressLevel = stressSample.getStress();
                         long timestamp = System.currentTimeMillis();
-                        String formattedTimestamp = formatTimestamp(timestamp);
-
-                        Log.d(TAG, "Stress level received: " + stressLevel);
-                        Log.d(TAG, "Timestamp: " + formattedTimestamp);
-
                         handleAbnormalStress(stressLevel, timestamp);
                     } else {
                         Log.d(TAG, "Unknown sample type received");
@@ -79,7 +80,7 @@ public class AlarmMonitoringService extends Service {
             } else if (currentTime - firstAbnormalTimestamp >= THREE_MINUTE_IN_MILLISECONDS) {
                 if (!isAlarmActive()) {
                     Log.d(TAG, "Abnormal heart rate sustained for 3 minutes. Triggering alarm.");
-                    triggerAlarm(timestamp, heartRate, -1);  // No stress data available, passing -1 for stressLevel
+                    triggerAlarm(timestamp, heartRate, -1);  // No stress data available
                 } else {
                     Log.d(TAG, "Alarm already triggered. Skipping...");
                 }
@@ -102,7 +103,7 @@ public class AlarmMonitoringService extends Service {
             } else if (currentTime - firstAbnormalTimestamp >= THREE_MINUTE_IN_MILLISECONDS) {
                 if (!isAlarmActive()) {
                     Log.d(TAG, "High stress sustained for 3 minutes. Triggering alarm.");
-                    triggerAlarm(timestamp, -1, stressLevel);  // No heart rate data available, passing -1 for heartRate
+                    triggerAlarm(timestamp, -1, stressLevel);  // No heart rate data available
                 } else {
                     Log.d(TAG, "Alarm already triggered. Skipping...");
                 }
@@ -114,35 +115,49 @@ public class AlarmMonitoringService extends Service {
         }
     }
 
+    private void saveAlarmTriggeredDataToFirestore(long timestamp, int heartRate, int stressLevel) {
+        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+        if (user == null) {
+            Log.w(TAG, "User not authenticated, cannot write to Firestore");
+            return;
+        }
+
+        String userId = user.getUid(); // Use UID as the unique identifier
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+        String formattedTimestamp = formatTimestamp(timestamp);
+
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
+                != PackageManager.PERMISSION_GRANTED &&
+                ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION)
+                        != PackageManager.PERMISSION_GRANTED) {
+            Log.w(TAG, "Location permissions are not granted, skipping location data");
+            return;
+        }
+
+        fusedLocationClient.getLastLocation()
+                .addOnSuccessListener(location -> {
+                    Map<String, Object> alarmData = new HashMap<>();
+                    alarmData.put("timestamp", formattedTimestamp);
+                    alarmData.put("heartRate", heartRate);
+                    alarmData.put("stressLevel", stressLevel);
+
+                    if (location != null) {
+                        String mapsLink = "https://www.google.com/maps?q=" + location.getLatitude() + "," + location.getLongitude();
+                        alarmData.put("locationLink", mapsLink);
+                    } else {
+                        Log.w(TAG, "Location data is unavailable");
+                    }
+
+                    db.collection("alarmData").document(userId).collection("entries").add(alarmData)
+                            .addOnSuccessListener(documentReference -> Log.d(TAG, "Data written successfully with ID: " + documentReference.getId()))
+                            .addOnFailureListener(e -> Log.w(TAG, "Failed to write document to Firestore", e));
+                })
+                .addOnFailureListener(e -> Log.e(TAG, "Failed to fetch location", e));
+    }
+
     private String formatTimestamp(long timestamp) {
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault());
         return sdf.format(new Date(timestamp));
-    }
-
-    // Modified method to check user authentication
-    private void saveAlarmTriggeredDataToFirestore(long timestamp, int heartRate, int stressLevel) {
-        FirebaseFirestore db = FirebaseFirestore.getInstance();
-        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
-        String formattedTimestamp = formatTimestamp(timestamp);
-
-        if (user != null) {  // Check if the user is authenticated
-            Map<String, Object> alarmData = new HashMap<>();
-            alarmData.put("timestamp", formattedTimestamp);
-            alarmData.put("heartrate", heartRate);
-            alarmData.put("stressLevel", stressLevel);
-            alarmData.put("userId", user.getUid());  // Store the user's UID in the data
-
-            db.collection("alarmData")
-                    .add(alarmData)
-                    .addOnSuccessListener(documentReference -> {
-                        Log.d(TAG, "DocumentSnapshot written with ID: " + documentReference.getId());
-                    })
-                    .addOnFailureListener(e -> {
-                        Log.w(TAG, "Error adding document", e);
-                    });
-        } else {
-            Log.w(TAG, "User not authenticated, cannot write to Firestore");
-        }
     }
 
     private boolean isAlarmActive() {
@@ -176,6 +191,7 @@ public class AlarmMonitoringService extends Service {
     @Override
     public void onCreate() {
         super.onCreate();
+        fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
         IntentFilter filter = new IntentFilter();
         filter.addAction(DeviceService.ACTION_REALTIME_SAMPLES);
         LocalBroadcastManager.getInstance(this).registerReceiver(mReceiver, filter);
@@ -195,7 +211,6 @@ public class AlarmMonitoringService extends Service {
         startActivity(alarmIntent);
 
         saveAlarmTriggeredDataToFirestore(timestamp, heartRate, stressLevel);
-
         setAlarmTriggered(true);
         Log.d(TAG, "AlarmActivity started from service, alarm state set to triggered.");
     }
