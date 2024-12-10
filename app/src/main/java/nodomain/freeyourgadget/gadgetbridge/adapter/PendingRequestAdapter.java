@@ -3,32 +3,63 @@ package nodomain.freeyourgadget.gadgetbridge.adapter;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import java.util.List;
+import java.util.Map;
+
+import nodomain.freeyourgadget.gadgetbridge.R;
 
 public class PendingRequestAdapter extends RecyclerView.Adapter<PendingRequestAdapter.ViewHolder> {
 
-    private List<String> pendingRequests;
+    public interface OnRequestActionListener {
+        void onAccept(String documentId);
+        void onDecline(String documentId);
+    }
 
-    public PendingRequestAdapter(List<String> pendingRequests) {
+    private final List<Map<String, Object>> pendingRequests;
+    private final OnRequestActionListener actionListener;
+
+    public PendingRequestAdapter(List<Map<String, Object>> pendingRequests, OnRequestActionListener actionListener) {
         this.pendingRequests = pendingRequests;
+        this.actionListener = actionListener;
     }
 
     @NonNull
     @Override
     public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         View view = LayoutInflater.from(parent.getContext())
-                .inflate(android.R.layout.simple_list_item_1, parent, false);
+                .inflate(R.layout.item_pending_request, parent, false);
         return new ViewHolder(view);
     }
 
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
-        String request = pendingRequests.get(position);
-        holder.requestTextView.setText(request);
+        Map<String, Object> request = pendingRequests.get(position);
+
+        String requesterUsername = (String) request.get("requesterUsername");
+        String requesterEmail = (String) request.get("requesterEmail");
+        String status = (String) request.get("status");
+        String documentId = (String) request.get("documentId");
+
+        holder.requesterUsername.setText("Requester: " + requesterUsername);
+        holder.requesterEmail.setText("Email: " + requesterEmail);
+        holder.status.setText("Status: " + status);
+
+        holder.acceptButton.setOnClickListener(v -> {
+            if (actionListener != null) {
+                actionListener.onAccept(documentId);
+            }
+        });
+
+        holder.declineButton.setOnClickListener(v -> {
+            if (actionListener != null) {
+                actionListener.onDecline(documentId);
+            }
+        });
     }
 
     @Override
@@ -37,11 +68,16 @@ public class PendingRequestAdapter extends RecyclerView.Adapter<PendingRequestAd
     }
 
     public static class ViewHolder extends RecyclerView.ViewHolder {
-        TextView requestTextView;
+        TextView requesterUsername, requesterEmail, status;
+        Button acceptButton, declineButton;
 
         public ViewHolder(View itemView) {
             super(itemView);
-            requestTextView = itemView.findViewById(android.R.id.text1);
+            requesterUsername = itemView.findViewById(R.id.requesterUsername);
+            requesterEmail = itemView.findViewById(R.id.requesterEmail);
+            status = itemView.findViewById(R.id.status);
+            acceptButton = itemView.findViewById(R.id.buttonAccept);
+            declineButton = itemView.findViewById(R.id.buttonDecline);
         }
     }
 }

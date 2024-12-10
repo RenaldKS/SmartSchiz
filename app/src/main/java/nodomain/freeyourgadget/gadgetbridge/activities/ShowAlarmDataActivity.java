@@ -18,6 +18,7 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
@@ -76,6 +77,14 @@ public class ShowAlarmDataActivity extends AppCompatActivity {
             Intent intent = new Intent(this, ConnectedAccountActivity.class);
             startActivity(intent);
         });
+        Button showDeclinedButton = findViewById(R.id.show_declined_button);
+        showDeclinedButton.setOnClickListener(v -> {
+            Log.d(TAG, "Navigating to DeclinedAccountsActivity");
+            Toast.makeText(this, "Opening Declined Accounts", Toast.LENGTH_SHORT).show();
+            Intent intent = new Intent(ShowAlarmDataActivity.this, DeclinedAccountsActivity.class);
+            startActivity(intent);
+        });
+
     }
 
     private void fetchAlarmData(String currentUserId) {
@@ -261,17 +270,111 @@ public class ShowAlarmDataActivity extends AppCompatActivity {
     // Helper method to send the request after looking up the target user
     private void sendConnectionRequestToFirestore(String requesterId, String targetUserId) {
         FirebaseFirestore db = FirebaseFirestore.getInstance();
+        FirebaseAuth auth = FirebaseAuth.getInstance();
+        FirebaseUser currentUser = auth.getCurrentUser();
 
+        if (currentUser == null) {
+            Log.w(TAG, "No authenticated user");
+            Toast.makeText(this, "You need to log in to send a connection request", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        String requesterEmail = currentUser.getEmail();
+        if (requesterEmail == null) {
+            Log.w(TAG, "Requester email is null");
+            Toast.makeText(this, "Your account information is incomplete", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        // Log the requester's email
+        Log.d(TAG, "Requester email: " + requesterEmail);
+
+        // Fetch the requester's username from the `users` collection
+        Log.d(TAG, "Fetching requester username from 'users' collection using email: " + requesterEmail);
+        db.collection("users")
+                .whereEqualTo("email", requesterEmail)
+                .get()
+                .addOnSuccessListener(requesterQuerySnapshot -> {
+                    if (!requesterQuerySnapshot.isEmpty()) {
+                        String requesterUsername = requesterQuerySnapshot.getDocuments().get(0).getId();
+                        Log.d(TAG, "Requester username found: " + requesterUsername);
+
+                        // Fetch the target user's data from the `users` collection
+                        Log.d(TAG, "Fetching target user from 'users' collection using UID or username: " + targetUserId);
+                        db.collection("users")
+                                .whereEqualTo("UID", targetUserId)  // First attempt with UID
+                                .get()
+                                .addOnSuccessListener(targetQuerySnapshot -> {
+                                    if (!targetQuerySnapshot.isEmpty()) {
+                                        // Target user found by UID
+                                        handleTargetUserFound(targetQuerySnapshot, db, requesterId, requesterUsername, requesterEmail, targetUserId);
+                                    } else {
+                                        // Retry fetching using the username if UID fails
+                                        Log.w(TAG, "Target user not found for UID: " + targetUserId + ". Retrying with username...");
+                                        db.collection("users")
+                                                .whereEqualTo("username", targetUserId) // Retry with username
+                                                .get()
+                                                .addOnSuccessListener(usernameQuerySnapshot -> {
+                                                    if (!usernameQuerySnapshot.isEmpty()) {
+                                                        // Target user found by username
+                                                        handleTargetUserFound(usernameQuerySnapshot, db, requesterId, requesterUsername, requesterEmail, targetUserId);
+                                                    } else {
+                                                        // Target user not found by either UID or username
+                                                        Log.w(TAG, "Target user not found for UID or username: " + targetUserId);
+                                                        Toast.makeText(this, "Target user not found", Toast.LENGTH_SHORT).show();
+                                                    }
+                                                })
+                                                .addOnFailureListener(e -> {
+                                                    Log.w(TAG, "Failed to fetch target user data by username: " + targetUserId, e);
+                                                    Toast.makeText(this, "Failed to find target user", Toast.LENGTH_SHORT).show();
+                                                });
+                                    }
+                                })
+                                .addOnFailureListener(e -> {
+                                    Log.w(TAG, "Failed to fetch target user data by UID: " + targetUserId, e);
+                                    Toast.makeText(this, "Failed to find target user", Toast.LENGTH_SHORT).show();
+                                });
+                    } else {
+                        Log.w(TAG, "Requester user data not found for email: " + requesterEmail);
+                        Toast.makeText(this, "Your account information is incomplete", Toast.LENGTH_SHORT).show();
+                    }
+                })
+                .addOnFailureListener(e -> {
+                    Log.w(TAG, "Failed to fetch requester user data for email: " + requesterEmail, e);
+                    Toast.makeText(this, "Failed to retrieve your account details", Toast.LENGTH_SHORT).show();
+                });
+    }
+
+    // Helper method to handle the target user found
+    private void handleTargetUserFound(QuerySnapshot querySnapshot, FirebaseFirestore db, String requesterId,
+                                       String requesterUsername, String requesterEmail, String targetUserId) {
+        DocumentSnapshot targetUserDocument = querySnapshot.getDocuments().get(0);
+        String targetUsername = targetUserDocument.getId();
+        String targetEmail = targetUserDocument.getString("email");
+
+        Log.d(TAG, "Target user found: Username=" + targetUsername + ", Email=" + targetEmail);
+
+        // Create the request data
         Map<String, Object> request = new HashMap<>();
         request.put("requesterId", requesterId);
-        request.put("targetUserId", targetUserId); // Store UID instead of email
+        request.put("requesterUsername", requesterUsername);
+        request.put("requesterEmail", requesterEmail);
+        request.put("targetUserId", targetUserId);
+        request.put("targetUsername", targetUsername);
+        request.put("targetEmail", targetEmail);
         request.put("status", "pending");
         request.put("timestamp", FieldValue.serverTimestamp());
 
+        // Log the request data before saving
+        Log.d(TAG, "Connection request data: " + request);
+
+        // Save the request in the requester's `connectionRequests` subcollection
         db.collection("connectionRequests")
+                .document(targetUsername)
+                .collection("requests")
                 .add(request)
                 .addOnSuccessListener(documentReference -> {
-                    Log.d(TAG, "Connection request sent successfully");
+                    Log.d(TAG, "Connection request sent successfully with ID: " + documentReference.getId());
                     Toast.makeText(this, "Request sent successfully", Toast.LENGTH_SHORT).show();
                 })
                 .addOnFailureListener(e -> {

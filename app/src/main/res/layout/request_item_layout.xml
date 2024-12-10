@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="16dp">
+
+    <!-- TextView to display the requester's username -->
+    <TextView
+        android:id="@+id/requester_username"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Requester Username"
+        android:textSize="16sp"
+        android:paddingBottom="8dp" />
+
+    <!-- TextView to display the requester's email -->
+    <TextView
+        android:id="@+id/requester_email"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Requester Email"
+        android:textSize="14sp"
+        android:paddingBottom="8dp" />
+
+    <!-- Buttons for accepting or declining the request -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="end">
+
+        <Button
+            android:id="@+id/accept_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Accept" />
+
+        <Button
+            android:id="@+id/decline_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Decline"
+            android:layout_marginStart="16dp" />
+    </LinearLayout>
+
+</LinearLayout>

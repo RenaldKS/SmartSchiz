@@ -3236,4 +3236,7 @@
     <string name="login_activity_label">Login</string>
     <string name="alarm_activity_label">Alarm Activity</string>
     <string name="action_AlarmActivity">Alarm Activity</string>
+    <string name="pending_request_label">Pending Requests</string>
+    <string name="connected_accounts_label">Connected Accounts</string>
+    <string name="declined_accounts_label">Declined Accounts</string>
 </resources>

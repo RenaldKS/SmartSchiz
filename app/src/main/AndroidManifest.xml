@@ -172,11 +172,15 @@
             android:parentActivityName=".activities.ControlCenterv2" />
         <activity
             android:name=".activities.PendingRequestActivity"
-            android:label="@string/alarm_activity_label"
+            android:label="@string/pending_request_label"
             android:parentActivityName=".activities.AlarmActivity" />
 
-        <activity android:name=".activities.ConnectedAccountActivity" />
-
+        <activity android:name=".activities.ConnectedAccountActivity"
+            android:label="@string/connected_accounts_label"
+            android:parentActivityName=".activities.AlarmActivity" />
+        <activity android:name=".activities.DeclinedAccountsActivity"
+            android:label="@string/declined_accounts_label"
+            android:parentActivityName=".activities.AlarmActivity" />
 
         <activity
             android:name=".activities.DashboardPreferencesActivity"
