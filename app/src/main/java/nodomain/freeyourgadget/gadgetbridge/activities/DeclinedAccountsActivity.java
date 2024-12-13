@@ -37,6 +37,7 @@ public class DeclinedAccountsActivity extends AppCompatActivity {
         recyclerView.setAdapter(adapter);
 
         fetchDeclinedAccounts();
+
     }
 
     private void fetchDeclinedAccounts() {
