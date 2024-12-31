@@ -45,8 +45,9 @@ public class DashboardStressSimpleWidget extends AbstractGaugeWidget {
 
     @Override
     protected void populateData(final DashboardFragment.DashboardData dashboardData) {
-        dashboardData.computeIfAbsent("stress", () -> DashboardStressData.compute(dashboardData));
+        dashboardData.computeIfAbsent("stress", () -> DashboardStressData.compute(dashboardData, getContext()));
     }
+
 
     @Override
     protected void draw(final DashboardFragment.DashboardData dashboardData) {

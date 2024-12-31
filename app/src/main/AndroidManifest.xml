@@ -475,6 +475,13 @@
             android:label="@string/prefs_wena3_notification_per_app_settings_title"
             android:parentActivityName=".activities.app_specific_notifications.AppSpecificNotificationSettingsActivity"
             />
+        <service
+            android:name=".service.MyFirebaseMessagingService"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="com.google.firebase.MESSAGING_EVENT" />
+            </intent-filter>
+        </service>
 
         <service
             android:name=".externalevents.NotificationListener"
