@@ -7,6 +7,8 @@ import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.FirebaseFirestore;
@@ -14,6 +16,7 @@ import com.google.firebase.firestore.QueryDocumentSnapshot;
 
 import java.util.ArrayList;
 import java.util.List;
+
 
 import nodomain.freeyourgadget.gadgetbridge.R;
 import nodomain.freeyourgadget.gadgetbridge.adapter.ConnectedAccountsAdapter;
@@ -47,7 +50,7 @@ public class DeclinedAccountsActivity extends AppCompatActivity {
 
         if (currentUserEmail == null) {
             Log.w("DeclinedAccounts", "Current user email is null");
-            Toast.makeText(this, "No user email found.", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "Email tidak ditemukan", Toast.LENGTH_SHORT).show();
             return;
         }
 
@@ -61,7 +64,7 @@ public class DeclinedAccountsActivity extends AppCompatActivity {
                         fetchDeclinedAccountsForUser(currentUsername);
                     } else {
                         Log.w("DeclinedAccounts", "No user found for email: " + currentUserEmail);
-                        Toast.makeText(this, "User not found for email.", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(this, "Email tidak ditemukan", Toast.LENGTH_SHORT).show();
                     }
                 });
     }
@@ -99,6 +102,21 @@ public class DeclinedAccountsActivity extends AppCompatActivity {
     }
 
     private void deleteDeclinedConnection(String documentId) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("Hapus Data ?")
+                .setMessage("Hapus Data akun ditolak ini ?")
+                .setPositiveButton("Hapus", (dialog, which) -> {
+                    performDelete(documentId);
+                    dialog.dismiss();
+                })
+                .setNegativeButton("Batalkan", (dialog, which) -> {
+                    dialog.dismiss();
+                })
+                .create()
+                .show();
+    }
+
+    private void performDelete(String documentId) {
         FirebaseFirestore db = FirebaseFirestore.getInstance();
         FirebaseAuth auth = FirebaseAuth.getInstance();
         String currentUserEmail = auth.getCurrentUser() != null ? auth.getCurrentUser().getEmail() : null;
@@ -121,12 +139,12 @@ public class DeclinedAccountsActivity extends AppCompatActivity {
                                 .document(documentId)
                                 .delete()
                                 .addOnSuccessListener(aVoid -> {
-                                    Toast.makeText(this, "Declined connection deleted successfully", Toast.LENGTH_SHORT).show();
+                                    Toast.makeText(this, "Berhasil Dihapus", Toast.LENGTH_SHORT).show();
                                     fetchDeclinedAccounts(); // Refresh the list
                                 })
                                 .addOnFailureListener(e -> {
                                     Log.w("DeclinedAccounts", "Error deleting declined connection", e);
-                                    Toast.makeText(this, "Error deleting declined connection", Toast.LENGTH_SHORT).show();
+                                    Toast.makeText(this, "Terjadi kesalahan, coba lagi", Toast.LENGTH_SHORT).show();
                                 });
                     } else {
                         Log.w("DeclinedAccounts", "Error fetching current user's username");

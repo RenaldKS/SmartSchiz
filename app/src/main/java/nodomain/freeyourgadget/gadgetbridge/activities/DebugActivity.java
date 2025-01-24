@@ -19,6 +19,7 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>. */
 package nodomain.freeyourgadget.gadgetbridge.activities;
 
+import static android.content.ContentValues.TAG;
 import static android.content.Intent.EXTRA_SUBJECT;
 import static nodomain.freeyourgadget.gadgetbridge.util.GB.NOTIFICATION_CHANNEL_ID;
 
@@ -83,14 +84,37 @@ import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.firestore.CollectionReference;
+import com.google.firebase.firestore.DocumentReference;
+import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.Query;
+import com.google.firebase.firestore.QueryDocumentSnapshot; // Import this!
+
+
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationServices;
 
+import nodomain.freeyourgadget.gadgetbridge.util.FCMAccessTokenProvider;
+import okhttp3.Call;
+import okhttp3.Callback;
+import okhttp3.MediaType;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.RequestBody;
+import okhttp3.Response;
+import java.io.IOException;
+import com.google.auth.oauth2.GoogleCredentials;
+import com.google.auth.http.HttpCredentialsAdapter;
+import com.google.auth.Credentials;
+
+import org.json.JSONException;
+import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
+import java.io.IOException;
 import java.io.Serializable;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -105,6 +129,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Random;
 import java.util.TreeMap;
+import java.util.concurrent.Executors;
 
 import nodomain.freeyourgadget.gadgetbridge.BuildConfig;
 import nodomain.freeyourgadget.gadgetbridge.GBApplication;
@@ -140,11 +165,13 @@ import nodomain.freeyourgadget.gadgetbridge.util.PendingIntentUtils;
 import nodomain.freeyourgadget.gadgetbridge.util.Prefs;
 import nodomain.freeyourgadget.gadgetbridge.util.StringUtils;
 import nodomain.freeyourgadget.gadgetbridge.util.WidgetPreferenceStorage;
+import okhttp3.MediaType;
 
 public class DebugActivity extends AbstractGBActivity {
     private static final Logger LOG = LoggerFactory.getLogger(DebugActivity.class);
 
     private static Bundle dataLossSave;
+    private static final String TAG = "DebugActivity";
     private FusedLocationProviderClient fusedLocationClient;
     private static final String EXTRA_REPLY = "reply";
     private static final String ACTION_REPLY
@@ -249,17 +276,27 @@ public class DebugActivity extends AbstractGBActivity {
             @Override
             public void onClick(View v) {
                 // Example values for heart rate, stress level, and timestamp
-                int heartRate = 85;  // You can replace this with dynamic values if needed
-                int stressLevel = 65;  // Replace this with real stress level data
+                int heartRate = 85;  // Replace with dynamic values
+                int stressLevel = 65;  // Replace with real data
                 long timestamp = System.currentTimeMillis();
 
-                // Call the method to save data to Firestore
+                // Log the data being saved
+                Log.d("DebugActivity", "Saving data: Heart Rate = " + heartRate + ", Stress Level = " + stressLevel + ", Timestamp = " + timestamp);
+
+                // Save data to Firestore
                 saveDataToFirestore(heartRate, stressLevel, timestamp);
+
+                // Send notifications to connected accounts
+                sendNotificationsToConnectedAccounts(heartRate, stressLevel);
+
+                // Start AlarmActivity and pass data
+                Intent intent = new Intent(DebugActivity.this, AlarmActivity.class);
+                intent.putExtra("heartRate", heartRate);
+                intent.putExtra("stressLevel", stressLevel);
+                intent.putExtra("timestamp", timestamp);
+                startActivity(intent);
             }
         });
-
-
-
 
 
         Button incomingCallButton = findViewById(R.id.incomingCallButton);
@@ -882,6 +919,208 @@ public class DebugActivity extends AbstractGBActivity {
         SimpleDateFormat sdf = new SimpleDateFormat("EEEE, dd-MM-yyyy, HH:mm:ss", Locale.getDefault());
         return sdf.format(new Date(timestamp));  // Format the timestamp as a readable date and time
     }
+    private void sendNotificationsToConnectedAccounts(int heartRate, int stressLevel) {
+        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+        if (user == null) {
+            Log.w(TAG, "sendNotificationsToConnectedAccounts: User not authenticated.");
+            return;
+        }
+
+        String currentUserId = user.getUid();
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+
+        Log.d(TAG, "sendNotificationsToConnectedAccounts: Fetching username for current user ID: " + currentUserId);
+
+        // 1. Get the username associated with the current user's UID
+        db.collection("users")
+                .whereEqualTo("UID", currentUserId)
+                .get()
+                .addOnSuccessListener(userQuerySnapshot -> {
+                    if (userQuerySnapshot != null && !userQuerySnapshot.isEmpty()) {
+                        String currentUsername = userQuerySnapshot.getDocuments().get(0).getString("username");
+
+                        Log.d(TAG, "sendNotificationsToConnectedAccounts: Found current username: " + currentUsername);
+
+                        if (currentUsername != null) {
+                            Log.d(TAG, "sendNotificationsToConnectedAccounts: Current username: " + currentUsername);
+
+                            // 2. Now use the username to construct the correct path
+                            DocumentReference userConnectionDocument = db.collection("connectionRequests").document(currentUsername);
+                            CollectionReference requestsSubcollection = userConnectionDocument.collection("requests");
+
+                            Log.d(TAG, "sendNotificationsToConnectedAccounts: Looking in collection: connectionRequests");
+                            Log.d(TAG, "sendNotificationsToConnectedAccounts: Looking in document: " + userConnectionDocument.getPath());
+                            Log.d(TAG, "sendNotificationsToConnectedAccounts: Looking in subcollection: " + requestsSubcollection.getPath());
+
+                            requestsSubcollection
+                                    .whereEqualTo("status", "accepted")
+                                    .get()
+                                    .addOnSuccessListener(querySnapshot -> {
+                                        // ... (Rest of the code remains the same: handling querySnapshot)
+                                        if (querySnapshot != null) {
+                                            Log.d(TAG, "sendNotificationsToConnectedAccounts: Query returned " + querySnapshot.size() + " documents.");
+                                            if(querySnapshot.isEmpty()){
+                                                Log.d(TAG, "sendNotificationsToConnectedAccounts: Query returned empty documents");
+                                            }
+                                            for (QueryDocumentSnapshot document : querySnapshot) {
+                                                Log.d(TAG, "sendNotificationsToConnectedAccounts: Processing document: " + document.getId());
+                                                Log.d(TAG, "sendNotificationsToConnectedAccounts: Document data: " + document.getData()); // Log document data
+                                                String requesterUsername = document.getString("requesterUsername");
+                                                if (requesterUsername != null) {
+                                                    Log.d(TAG, "sendNotificationsToConnectedAccounts: Found connected requester: " + requesterUsername);
+                                                    fetchAndSendNotification(requesterUsername, heartRate, stressLevel);
+                                                } else {
+                                                    Log.w(TAG, "sendNotificationsToConnectedAccounts: Document " + document.getId() + " is missing requesterUsername field.");
+                                                }
+                                            }
+                                        } else {
+                                            Log.w(TAG, "sendNotificationsToConnectedAccounts: QuerySnapshot is null.");
+                                        }
+                                    })
+                                    .addOnFailureListener(e -> Log.w(TAG, "sendNotificationsToConnectedAccounts: Failed to fetch connection requests: " + e.getMessage()));
+                        } else {
+                            Log.w(TAG, "sendNotificationsToConnectedAccounts: Current username not found for UID: " + currentUserId);
+                        }
+                    } else {
+                        Log.w(TAG, "sendNotificationsToConnectedAccounts: User document not found for UID: " + currentUserId);
+                    }
+                })
+                .addOnFailureListener(e -> Log.w(TAG, "sendNotificationsToConnectedAccounts: Error fetching user document: " + e.getMessage()));
+    }
+
+    private void fetchAndSendNotification(String username, int heartRate, int stressLevel) {
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+
+        Log.d(TAG, "fetchAndSendNotification: Fetching user data for requester username: " + username);
+
+        db.collection("users")
+                .document(username) // Use the requester's username as the document ID
+                .get()
+                .addOnSuccessListener(documentSnapshot -> {
+                    if (documentSnapshot.exists()) {
+                        Log.d(TAG, "fetchAndSendNotification: User document found for requester: " + username);
+                        String token = documentSnapshot.getString("fcmToken");
+                        if (token != null) {
+                            Log.d(TAG, "fetchAndSendNotification: Found FCM token for requester: " + username);
+
+                            // Fetch the latest location link from alarmData collection
+                            db.collection("alarmData")
+                                    .document(username)
+                                    .collection("data")
+                                    .orderBy("timestamp", Query.Direction.DESCENDING)
+                                    .limit(1)
+                                    .get()
+                                    .addOnSuccessListener(alarmQuerySnapshot -> {
+                                        if (!alarmQuerySnapshot.isEmpty()) {
+                                            // Get the latest alarm data
+                                            DocumentSnapshot latestAlarmData = alarmQuerySnapshot.getDocuments().get(0);
+                                            String locationLink = latestAlarmData.getString("locationLink");
+
+                                            Log.d(TAG, "fetchAndSendNotification: Latest locationLink: " + locationLink);
+
+                                            String notificationBody = constructNotificationBody(heartRate, stressLevel, username);
+                                            if (locationLink != null) {
+                                                notificationBody += "\nTap to see the location.";
+                                            }
+
+                                            sendFCMNotificationWithIntent(this, token, "Health Alert", notificationBody, locationLink);
+                                        } else {
+                                            Log.w(TAG, "fetchAndSendNotification: No alarm data found for user: " + username);
+                                        }
+                                    })
+                                    .addOnFailureListener(e -> Log.w(TAG, "fetchAndSendNotification: Failed to fetch alarm data for user: " + username, e));
+                        } else {
+                            Log.w(TAG, "fetchAndSendNotification: fcmToken is missing for requester: " + username);
+                        }
+                    } else {
+                        Log.w(TAG, "fetchAndSendNotification: User document does not exist for requester: " + username);
+                    }
+                })
+                .addOnFailureListener(e -> Log.w(TAG, "fetchAndSendNotification: Failed to fetch user document for requester: " + username, e));
+    }
+
+
+    private String constructNotificationBody(int heartRate, int stressLevel, String username) {
+        StringBuilder body = new StringBuilder();
+        body.append("Alert has been triggered for ").append(username);
+        if (heartRate != -1) {
+            body.append(" (Abnormal heart rate: ").append(heartRate).append(")");
+        }
+        if (stressLevel != -1) {
+            body.append(" (High stress level: ").append(stressLevel).append(")");
+        }
+        return body.toString();
+    }
+
+    private void sendFCMNotificationWithIntent(Context context, String token, String title, String body, String locationLink) {
+        Log.d(TAG, "sendFCMNotificationWithIntent: Preparing to send notification. Title: " + title + ", Body: " + body + ", Token: " + token);
+
+        String FCM_API_URL = "https://fcm.googleapis.com/v1/projects/smartschiz-6a1d3/messages:send";
+
+        JSONObject payload = new JSONObject();
+        try {
+            JSONObject message = new JSONObject();
+            JSONObject notification = new JSONObject();
+
+            notification.put("title", title);
+            notification.put("body", body);
+
+            message.put("notification", notification);
+            message.put("token", token);
+
+            // Add FCM data payload for click actions and location link
+            JSONObject data = new JSONObject();
+            if (locationLink != null) {
+                data.put("click_action", "OPEN_MAP");
+                data.put("googleMapsUrl", locationLink); // Pass Google Maps link
+            } else {
+                data.put("click_action", "OPEN_PENDING_REQUESTS"); // Default action
+            }
+            message.put("data", data);
+
+            payload.put("message", message);
+        } catch (JSONException e) {
+            Log.e(TAG, "sendFCMNotificationWithIntent: Failed to create JSON payload", e);
+            return;
+        }
+
+        // Execute in a background thread
+        Executors.newSingleThreadExecutor().execute(() -> {
+            try {
+                String accessToken = FCMAccessTokenProvider.getAccessToken(context);
+                Log.d(TAG, "sendFCMNotificationWithIntent: Retrieved access token: " + accessToken);
+
+                OkHttpClient client = new OkHttpClient();
+                RequestBody requestBody = RequestBody.create(MediaType.parse("application/json; charset=utf-8"), payload.toString());
+                Request request = new Request.Builder()
+                        .url(FCM_API_URL)
+                        .post(requestBody)
+                        .addHeader("Authorization", "Bearer " + accessToken)
+                        .addHeader("Content-Type", "application/json; charset=utf-8")
+                        .build();
+
+                client.newCall(request).enqueue(new Callback() {
+                    @Override
+                    public void onFailure(Call call, IOException e) {
+                        Log.e(TAG, "sendFCMNotificationWithIntent: Failed to send notification", e);
+                    }
+
+                    @Override
+                    public void onResponse(Call call, Response response) throws IOException {
+                        if (response.isSuccessful()) {
+                            Log.d(TAG, "sendFCMNotificationWithIntent: Notification sent successfully");
+                        } else {
+                            Log.e(TAG, "sendFCMNotificationWithIntent: Failed with code: " + response.code() + ", message: " + response.body().string());
+                        }
+                    }
+                });
+            } catch (IOException e) {
+                Log.e(TAG, "sendFCMNotificationWithIntent: Failed to retrieve access token", e);
+            }
+        });
+    }
+
+
 
     @RequiresApi(Build.VERSION_CODES.O)
     @Override

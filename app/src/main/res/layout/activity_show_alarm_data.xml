@@ -8,7 +8,7 @@
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Alarm Data"
+        android:text="Data Riwayat Peringatan"
         android:textSize="18sp"
         android:layout_gravity="center"
         android:paddingBottom="8dp"/>
@@ -39,44 +39,30 @@
             <!-- Data entries will be added programmatically here -->
         </LinearLayout>
     </ScrollView>
-
+    <Button
+        android:id="@+id/monitoringservice"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/monitoring_service"
+        android:layout_marginTop="8dp"
+        android:layout_gravity="center_horizontal"/>
     <!-- Button to send connection request -->
     <Button
         android:id="@+id/sendRequestButton"
-        android:layout_width="match_parent"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Send Connection Request"
-        android:layout_marginTop="16dp"/>
-
-    <!-- Button to switch data -->
-    <Button
-        android:id="@+id/switchUserButton"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Switch User Data"
-        android:layout_marginTop="8dp"/>
-
-    <!-- Button to view pending requests -->
-    <Button
-        android:id="@+id/viewPendingRequestButton"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:text="Kirim Permintaan Koneksi Akun"
         android:layout_marginTop="8dp"
-        android:text="View Pending Requests" />
+        android:layout_gravity="center_horizontal"/>
+
 
     <Button
         android:id="@+id/viewConnectedAccountsButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="View Connected Accounts"
-        android:layout_marginTop="16dp"
+        android:text="Lihat Akun yang Terhubung"
+        android:layout_marginTop="8dp"
         android:layout_gravity="center_horizontal"/>
 
-    <Button
-        android:id="@+id/show_declined_button"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Show Declined Accounts"
-        android:layout_marginTop="16dp"
-        android:layout_gravity="center" />
+
 </LinearLayout>

@@ -1,7 +1,11 @@
 package nodomain.freeyourgadget.gadgetbridge.activities;
 
+import static android.content.ContentValues.TAG;
+
+import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
+import android.widget.Button;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -19,7 +23,7 @@ import nodomain.freeyourgadget.gadgetbridge.R;
 import nodomain.freeyourgadget.gadgetbridge.adapter.ConnectedAccountsAdapter;
 import nodomain.freeyourgadget.gadgetbridge.model.ConnectedUser;
 
-public class ConnectedAccountActivity extends AppCompatActivity {
+public class    ConnectedAccountActivity extends AppCompatActivity {
 
     private RecyclerView connectedAccountsRecyclerView;
     private ConnectedAccountsAdapter adapter;
@@ -38,6 +42,33 @@ public class ConnectedAccountActivity extends AppCompatActivity {
         connectedAccountsRecyclerView.setAdapter(adapter);
 
         fetchCurrentUsername();
+        Button viewPendingRequestButton = findViewById(R.id.viewPendingRequestButton);
+
+        viewPendingRequestButton.setOnClickListener(v -> {
+
+            Log.d(TAG, "Navigating to PendingRequestActivity");
+
+            Toast.makeText(this, "Membuka Permintaan Koneksi", Toast.LENGTH_SHORT).show();
+
+            Intent intent = new Intent(ConnectedAccountActivity.this, PendingRequestActivity.class);
+
+            startActivity(intent);
+
+        });
+
+        Button showDeclinedButton = findViewById(R.id.show_declined_button);
+
+        showDeclinedButton.setOnClickListener(v -> {
+
+            Log.d(TAG, "Navigating to DeclinedAccountsActivity");
+
+            Toast.makeText(this, "Membuka daftar akun ditolak", Toast.LENGTH_SHORT).show();
+
+            Intent intent = new Intent(ConnectedAccountActivity.this, DeclinedAccountsActivity.class);
+
+            startActivity(intent);
+
+        });
     }
 
     private void fetchCurrentUsername() {
@@ -47,7 +78,7 @@ public class ConnectedAccountActivity extends AppCompatActivity {
 
         if (currentUserEmail == null) {
             Log.w("ConnectedAccounts", "Current user email is null");
-            Toast.makeText(this, "No user email found.", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "Email Pengguna tidak ditemukan!", Toast.LENGTH_SHORT).show();
             return;
         }
 
@@ -61,12 +92,12 @@ public class ConnectedAccountActivity extends AppCompatActivity {
                         fetchConnectedAccountsForUser(currentUsername);
                     } else {
                         Log.w("ConnectedAccounts", "No user found for email: " + currentUserEmail);
-                        Toast.makeText(this, "User not found for email.", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(this, "Tidak ada akun yang terhubung dengan email tersebut", Toast.LENGTH_SHORT).show();
                     }
                 })
                 .addOnFailureListener(e -> {
                     Log.e("ConnectedAccounts", "Error fetching username", e);
-                    Toast.makeText(this, "Error fetching username.", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(this, "Gagal mendapatkan username.", Toast.LENGTH_SHORT).show();
                 });
     }
 
@@ -105,7 +136,7 @@ public class ConnectedAccountActivity extends AppCompatActivity {
     private void onDeclineConnection(String documentId) {
         if (currentUsername == null) {
             Log.w("ConnectedAccounts", "Current username is not available.");
-            Toast.makeText(this, "Error: Username not available.", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "Username gagal ditemukan", Toast.LENGTH_SHORT).show();
             return;
         }
 
@@ -118,12 +149,12 @@ public class ConnectedAccountActivity extends AppCompatActivity {
                 .document(documentId)
                 .update("status", "declined")
                 .addOnSuccessListener(aVoid -> {
-                    Toast.makeText(this, "Connection declined successfully", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(this, "Permintaan berhasil ditolak", Toast.LENGTH_SHORT).show();
                     fetchConnectedAccountsForUser(currentUsername); // Refresh the list after updating
                 })
                 .addOnFailureListener(e -> {
                     Log.w("ConnectedAccounts", "Error declining connection", e);
-                    Toast.makeText(this, "Error declining connection", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(this, "Gagal menolak permintaan", Toast.LENGTH_SHORT).show();
                 });
     }
 }

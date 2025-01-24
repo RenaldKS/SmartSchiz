@@ -23,14 +23,6 @@
         android:text="Stop Alarm"
         android:onClick="stopAlarm" />
 
-    <Button
-        android:id="@+id/back_button"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_below="@id/stop_vibration_button"
-        android:layout_centerHorizontal="true"
-        android:layout_marginTop="24dp"
-        android:text="Back"
-        android:onClick="goBack" />
+
 
 </RelativeLayout>

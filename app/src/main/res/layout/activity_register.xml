@@ -5,7 +5,7 @@
     android:layout_width="match_parent"
     android:background="@color/primary_dark"
     android:layout_height="match_parent"
-    tools:context=".RegisterActivity">
+    tools:context=".activities.RegisterActivity">
 
     <LinearLayout
         android:id="@+id/square"
@@ -25,7 +25,7 @@
             android:id="@+id/Register"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Register"
+            android:text="Daftar Akun"
             android:textColor="@color/primarytext_light"
             android:textSize="22sp"
             android:layout_marginBottom="16dp"
@@ -54,7 +54,7 @@
             android:id="@+id/password"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="Password"
+            android:hint="Kata Sandi"
             android:inputType="textPassword"
             android:padding="10dp"
             android:layout_marginBottom="10dp"/>
@@ -63,7 +63,7 @@
             android:id="@+id/confirm_password"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="Confirm Password"
+            android:hint="Konfirmasi Sandi"
             android:inputType="textPassword"
             android:padding="10dp"
             android:layout_marginBottom="20dp"/>
@@ -72,7 +72,7 @@
             android:id="@+id/register_button"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Register"
+            android:text="Daftar"
             android:padding="10dp"
             android:layout_marginBottom="16dp"
             android:textColor="@color/primarytext_dark"
@@ -82,11 +82,11 @@
             android:id="@+id/back_button"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Back"
-            android:layout_marginTop="10dp"
-            android:textColor="@color/primarytext_light"
+            android:text="Kembali"
+            android:padding="10dp"
+            android:layout_marginBottom="16dp"
+            android:textColor="@color/primarytext_dark"
             android:background="@color/primary_light"/>
-
     </LinearLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

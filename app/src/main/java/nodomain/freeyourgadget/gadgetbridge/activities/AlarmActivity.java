@@ -1,7 +1,9 @@
 package nodomain.freeyourgadget.gadgetbridge.activities;
 
 import android.content.Context;
+import android.content.Intent;
 import android.media.AudioAttributes;
+import android.media.AudioManager;
 import android.media.Ringtone;
 import android.media.RingtoneManager;
 import android.net.Uri;
@@ -9,27 +11,39 @@ import android.os.Bundle;
 import android.os.Vibrator;
 import android.view.View;
 import android.widget.Button;
+import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
 
 import nodomain.freeyourgadget.gadgetbridge.R;
+import nodomain.freeyourgadget.gadgetbridge.service.AlarmMonitoringService;
 
 public class AlarmActivity extends AppCompatActivity {
     private static final String TAG = "AlarmActivity";
-
+    TextView alarmText;
     private Vibrator vibrator;
-    private static Ringtone ringtone;
-    private static boolean isAlarmTriggered = false;
+    private Ringtone ringtone;
+    private boolean isAlarmTriggered = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_alarm);
+        alarmText = findViewById(R.id.alarm_text);
 
+        // Get strings from resources
+        String relaxationTechniques = getString(R.string.relaksasi_tips);
+        String distractionActivities = getString(R.string.alihkan_perhatian);
+        String copingWithHallucinations = getString(R.string.atasi_halusinasi);
+
+        // Combine and format the text
+        String fullText = "Saat Mengalami Halusinasi atau Panik:\n" + relaxationTechniques + "\n" + distractionActivities + "\n" + copingWithHallucinations;
+
+        alarmText.setText(fullText);
         // Initialize vibrator
         vibrator = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
 
-        // Start alarm (ringtone and vibration)
+        // Start alarm (ringtone and/or vibration)
         startAlarm();
 
         Button stopAlarmButton = findViewById(R.id.stop_vibration_button);
@@ -42,30 +56,36 @@ public class AlarmActivity extends AppCompatActivity {
     }
 
     private void startAlarm() {
-        // Start ringtone
-        if (ringtone == null) {
-            Uri alarmUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM);
-            if (alarmUri == null) {
-                alarmUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
+        // Get AudioManager to check ringer mode
+        AudioManager audioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
+
+        if (audioManager != null) {
+            int ringerMode = audioManager.getRingerMode();
+
+            if (ringerMode == AudioManager.RINGER_MODE_NORMAL) {
+                // Play ringtone
+                Uri alarmUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM);
+                if (alarmUri == null) {
+                    alarmUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
+                }
+                ringtone = RingtoneManager.getRingtone(getApplicationContext(), alarmUri);
+                if (ringtone != null) {
+                    ringtone.setAudioAttributes(new AudioAttributes.Builder()
+                            .setUsage(AudioAttributes.USAGE_ALARM)
+                            .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
+                            .build());
+                    ringtone.play();
+                }
+            } else if (ringerMode == AudioManager.RINGER_MODE_VIBRATE || ringerMode == AudioManager.RINGER_MODE_SILENT) {
+                // Vibrate only
+                if (vibrator != null && vibrator.hasVibrator()) {
+                    long[] vibrationPattern = {0, 500, 1000}; // Vibrate for 500ms, pause for 1000ms
+                    vibrator.vibrate(vibrationPattern, 0); // Repeat the pattern (0 = repeat indefinitely)
+                }
             }
-            ringtone = RingtoneManager.getRingtone(getApplicationContext(), alarmUri);
-            ringtone.setAudioAttributes(new AudioAttributes.Builder()
-                    .setUsage(AudioAttributes.USAGE_ALARM)
-                    .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
-                    .build());
-        }
 
-        if (!ringtone.isPlaying()) {
-            ringtone.play();
+            isAlarmTriggered = true;
         }
-
-        // Start vibration
-        if (vibrator != null && vibrator.hasVibrator()) {
-            long[] vibrationPattern = {0, 500, 1000}; // Vibrate for 500ms, pause for 1000ms
-            vibrator.vibrate(vibrationPattern, 0); // Repeat the pattern (0 = repeat indefinitely)
-        }
-
-        isAlarmTriggered = true;
     }
 
     private void stopAlarm() {
@@ -86,7 +106,9 @@ public class AlarmActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        // Ensure the alarm is stopped when the activity is destroyed
-        stopAlarm();
+        // Notify the service to reset alarm triggered flag
+        Intent intent = new Intent(this, AlarmMonitoringService.class);
+        intent.setAction("RESET_ALARM_TRIGGERED");
+        startService(intent);
     }
 }

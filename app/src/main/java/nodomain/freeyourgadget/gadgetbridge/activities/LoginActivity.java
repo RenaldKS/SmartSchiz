@@ -47,6 +47,11 @@ public class LoginActivity extends Activity {
 
         mAuth = FirebaseAuth.getInstance();
         db = FirebaseFirestore.getInstance();
+        FirebaseUser currentUser = mAuth.getCurrentUser();
+        if (currentUser != null) {
+            startActivity(new Intent(LoginActivity.this, ControlCenterv2.class));
+            finish();
+        }
 
         emailField = findViewById(R.id.username);
         passwordField = findViewById(R.id.password);
@@ -89,13 +94,17 @@ public class LoginActivity extends Activity {
                             saveUserToFirestore(user);
                             registerFCMToken(user);
 
-                            Toast.makeText(LoginActivity.this, "Welcome, " + user.getEmail(), Toast.LENGTH_SHORT).show();
+                            Toast.makeText(LoginActivity.this, "Selamat Datang, " + user.getEmail(), Toast.LENGTH_SHORT).show();
                             startActivity(new Intent(LoginActivity.this, ControlCenterv2.class));
-                            finish();
+                            finish();  // Close LoginActivity so the user doesn't return to it
                         }
                     } else {
+                        String errorMessage = "Authentikasi Gagal";
+                        if (task.getException() != null) {
+                            errorMessage = "Email atau Password Salah, Silakan Coba kembali";
+                        }
                         Log.w(TAG, "signInWithEmail:failure", task.getException());
-                        Toast.makeText(LoginActivity.this, "Authentication Failed: " + task.getException().getMessage(),
+                        Toast.makeText(LoginActivity.this, errorMessage,
                                 Toast.LENGTH_SHORT).show();
                     }
                 });
@@ -145,7 +154,7 @@ public class LoginActivity extends Activity {
             if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 Log.d(TAG, "Internet permission granted");
             } else {
-                Toast.makeText(this, "Internet permission is required for this app to function.", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "Koneksi diperlukan untuk menjalankan aplikasi ini", Toast.LENGTH_SHORT).show();
             }
         }
     }

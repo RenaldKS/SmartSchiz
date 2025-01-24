@@ -13,6 +13,7 @@ import androidx.annotation.NonNull;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.messaging.FirebaseMessaging;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -58,22 +59,22 @@ public class RegisterActivity extends Activity {
             String confirmPassword = confirmPasswordField.getText().toString().trim();
 
             if (!password.equals(confirmPassword)) {
-                Toast.makeText(RegisterActivity.this, "Passwords do not match", Toast.LENGTH_SHORT).show();
+                Toast.makeText(RegisterActivity.this, "Kata Sandi Tak Sama", Toast.LENGTH_SHORT).show();
                 return;
             }
 
             if (username.isEmpty() || email.isEmpty() || password.isEmpty()) {
-                Toast.makeText(RegisterActivity.this, "All fields are required", Toast.LENGTH_SHORT).show();
+                Toast.makeText(RegisterActivity.this, "Form tidak boleh kosong", Toast.LENGTH_SHORT).show();
                 return;
             }
 
             if (!isValidEmail(email)) {
-                Toast.makeText(RegisterActivity.this, "Invalid email format", Toast.LENGTH_SHORT).show();
+                Toast.makeText(RegisterActivity.this, "Email salah", Toast.LENGTH_SHORT).show();
                 return;
             }
 
             if (!isValidPassword(password)) {
-                Toast.makeText(RegisterActivity.this, "Password must be at least 6 characters", Toast.LENGTH_SHORT).show();
+                Toast.makeText(RegisterActivity.this, "Password terlalu pendek", Toast.LENGTH_SHORT).show();
                 return;
             }
 
@@ -94,35 +95,53 @@ public class RegisterActivity extends Activity {
     }
 
     private void checkUsernameAvailability(String username, String email, String password) {
-        db.collection("users").document(username).get()
+        // Convert the input username to lowercase
+        String normalizedUsername = username.toLowerCase();
+
+        db.collection("users").document(normalizedUsername).get()
                 .addOnSuccessListener(documentSnapshot -> {
                     if (documentSnapshot.exists()) {
-                        Toast.makeText(RegisterActivity.this, "Username is already taken", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(RegisterActivity.this, "Username sudah terdaftar", Toast.LENGTH_SHORT).show();
                     } else {
-                        registerUser(username, email, password);
+                        registerUser(normalizedUsername, email, password);
                     }
                 })
                 .addOnFailureListener(e -> {
                     Log.e(TAG, "Error checking username availability", e);
-                    Toast.makeText(RegisterActivity.this, "Error checking username, try again later", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(RegisterActivity.this, "Terjadi Kesalahan, Coba Lagi Nanti", Toast.LENGTH_SHORT).show();
                 });
     }
 
+
     private void registerUser(String username, String email, String password) {
+        String normalizedUsername = username.toLowerCase();
+
+        if (normalizedUsername.isEmpty() || email.isEmpty() || password.isEmpty()) {
+            Toast.makeText(RegisterActivity.this, "Form tidak boleh ada yang kosong", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        if (!normalizedUsername.matches("^[a-zA-Z0-9_]{3,15}$")) {
+            Toast.makeText(RegisterActivity.this, "Username harus berupa alphanumeric", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
         mAuth.createUserWithEmailAndPassword(email, password)
                 .addOnCompleteListener(this, task -> {
                     if (task.isSuccessful()) {
                         FirebaseUser user = mAuth.getCurrentUser();
                         if (user != null) {
-                            saveUserData(username, email, user.getUid());
+                            saveUserData(normalizedUsername, email, user.getUid());
+                            registerFCMToken(user); // Register FCM Token after user creation
                         }
                     } else {
                         Log.w(TAG, "createUserWithEmail:failure", task.getException());
-                        Toast.makeText(RegisterActivity.this, "Registration Failed: " + task.getException().getMessage(),
+                        Toast.makeText(RegisterActivity.this, "Registrasi Gagal: " + task.getException().getMessage(),
                                 Toast.LENGTH_SHORT).show();
                     }
                 });
     }
+
 
     private void saveUserData(String username, String email, String uid) {
         // Format lastLogin date as "Day, Date-Month-Year"
@@ -140,14 +159,33 @@ public class RegisterActivity extends Activity {
         db.collection("users").document(username)  // Username as document ID
                 .set(userData)  // Store user data directly under the username document
                 .addOnSuccessListener(aVoid -> {
-                    Toast.makeText(RegisterActivity.this, "Registration Successful", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(RegisterActivity.this, "Berhasil Mendaftar", Toast.LENGTH_SHORT).show();
                     startActivity(new Intent(RegisterActivity.this, LoginActivity.class));
                     finish();
                 })
                 .addOnFailureListener(e -> {
                     Log.e(TAG, "Error saving user data", e);
-                    Toast.makeText(RegisterActivity.this, "Failed to save user data, try again later", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(RegisterActivity.this, "Gagal menyimpan data pengguna", Toast.LENGTH_SHORT).show();
                 });
     }
+    private void registerFCMToken(FirebaseUser user) {
+        FirebaseMessaging.getInstance().getToken()
+                .addOnCompleteListener(task -> {
+                    if (task.isSuccessful() && task.getResult() != null) {
+                        String fcmToken = task.getResult();
+                        Log.d(TAG, "FCM Token: " + fcmToken);
+
+                        String normalizedUsername = user.getEmail().split("@")[0].toLowerCase(); // Normalize username
+                        db.collection("users")
+                                .document(normalizedUsername)
+                                .update("fcmToken", fcmToken)
+                                .addOnSuccessListener(aVoid -> Log.d(TAG, "FCM token successfully updated in Firestore"))
+                                .addOnFailureListener(e -> Log.w(TAG, "Error updating FCM token in Firestore", e));
+                    } else {
+                        Log.w(TAG, "Failed to fetch FCM token", task.getException());
+                    }
+                });
+    }
+
 }
 

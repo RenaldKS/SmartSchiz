@@ -70,6 +70,7 @@ import com.google.android.material.appbar.MaterialToolbar;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.navigation.NavigationView;
+import com.google.firebase.auth.FirebaseAuth;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -175,11 +176,6 @@ public class ControlCenterv2 extends AppCompatActivity
         AbstractGBActivity.init(this, AbstractGBActivity.NO_ACTIONBAR);
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        Intent serviceIntent = new Intent(this, AlarmMonitoringService.class);
-        startService(serviceIntent);
-
-
-
 
         Prefs prefs = GBApplication.getPrefs();
 
@@ -415,7 +411,11 @@ public class ControlCenterv2 extends AppCompatActivity
             launchDiscoveryActivity();
             return false;
         } else if (itemId == R.id.action_quit) {
-            GBApplication.quit();
+            FirebaseAuth.getInstance().signOut(); // Logs the user out of Firebase
+            final Intent loginIntent = new Intent(this, LoginActivity.class);
+            loginIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK); // Clears activity stack
+            startActivity(loginIntent);
+            finish(); // Close current activity
             return false;
         } else if (itemId == R.id.donation_link) {
             final Intent i = new Intent(Intent.ACTION_VIEW, Uri.parse("https://liberapay.com/Gadgetbridge")); //TODO: centralize if ever used somewhere else

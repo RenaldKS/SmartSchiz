@@ -2,6 +2,7 @@ import java.nio.file.Files
 
 apply plugin: "com.android.application"
 apply plugin: 'com.google.protobuf'
+apply plugin: 'com.google.dagger.hilt.android'
 
 tasks.withType(Test) {
     systemProperty "MiFirmwareDir", System.getProperty("MiFirmwareDir", null)
@@ -124,6 +125,12 @@ android {
             res.srcDirs += "build/generated/res/changelog"
         }
     }
+    packagingOptions {
+        exclude 'META-INF/DEPENDENCIES'
+        // You can also exclude other conflicting files if necessary:
+        // exclude 'META-INF/LICENSE'
+        // exclude 'META-INF/NOTICE'
+    }
 
     buildTypes {
         release {
@@ -228,10 +235,23 @@ dependencies {
     implementation "com.google.code.gson:gson:2.11.0"
     implementation 'com.google.android.gms:play-services-location:21.0.1'
 
+    implementation 'com.google.dagger:hilt-android:2.48' // Hilt core
+    annotationProcessor 'com.google.dagger:hilt-android-compiler:2.48'
+
     implementation 'com.google.firebase:firebase-auth:19.3.2'
     implementation 'com.google.firebase:firebase-firestore:21.7.1'
     implementation 'com.google.firebase:firebase-messaging:20.3.0'
+
     implementation "androidx.work:work-runtime:2.9.1"
+    implementation 'com.squareup.okhttp3:okhttp:4.11.0' // For HTTP requests
+
+    implementation 'com.google.auth:google-auth-library-oauth2-http:1.11.0'  // Add this line
+    implementation 'com.google.api-client:google-api-client:2.0.0'            // For Google API client
+
+
+    implementation 'com.google.auth:google-auth-library-oauth2-http:1.15.0' // For access token generation
+    implementation 'com.google.http-client:google-http-client-gson:1.40.1' // For HTTP communication
+
 
 
 

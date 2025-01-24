@@ -5,6 +5,9 @@
     <string name="about_activity_title_generic">About SmartSchiz</string>
     <string name="about_description_generic">Cloudless copylefted libre replacement for closed source Android gadget apps from vendors.</string>
     <string name="gadgetbridge_running_generic">SmartSchiz running</string>
+    <string name="relaksasi_tips">**Teknik Relaksasi:**\n* Bernapas dalam\n* Meditasi singkat\n* Yoga atau peregangan ringan</string>
+    <string name="alihkan_perhatian">**Aktivitas Mengalihkan Perhatian:**\n* Membaca buku\n* Mendengarkan musik\n* Mewarnai atau menggambar\n* Berada di alam</string>
+    <string name="atasi_halusinasi">**Menghadapi Halusinasi:**\n* Kenali sebagai bagian dari kondisi\n* Jangan lawan, alihkan perhatian\n* Bicara dengan orang terdekat\n* Buat jadwal kegiatan</string>
 
     <string name="application_name_banglejs_main">Bangle.js Gadgetbridge</string>
     <string name="title_activity_controlcenter_banglejs_main">Bangle.js Gadgetbridge</string>
@@ -3232,11 +3235,27 @@
     <string name="insufficient_space_for_upload">"Insufficient space for upload"</string>
     <string name="smart_ring_measurement_error_worn_incorrectly">Measurement error. Are the ring\'s sensors oriented correctly?</string>
     <string name="smart_ring_measurement_error_unknown">Unknown measurement error %d received from ring</string>
-    <string name="register_activity_label">Register</string>
-    <string name="login_activity_label">Login</string>
+    <string name="register_activity_label">Daftar</string>
+    <string name="login_activity_label">Masuk</string>
     <string name="alarm_activity_label">Alarm Activity</string>
     <string name="action_AlarmActivity">Alarm Activity</string>
-    <string name="pending_request_label">Pending Requests</string>
-    <string name="connected_accounts_label">Connected Accounts</string>
-    <string name="declined_accounts_label">Declined Accounts</string>
+    <string name="pending_request_label">Permintaan Koneksi</string>
+    <string name="connected_accounts_label">Akun Terhubung</string>
+    <string name="declined_accounts_label">Akun Ditolak</string>
+    <string name="action_logout">Keluar</string>
+    <string name="monitoring_service">Layanan Monitoring</string>
+    <string name="monitoring_explanation">Dengan mengaktifkan ini, Anda sepenuhnya memahami bahwa:\n\n1. Detak jantung dan tingkat stres Anda akan dipantau.\n2. Ketika mencapai nilai tertentu, alarm atau peringatan akan dipicu untuk memberi Anda peringatan
+                                        tentang detak jantung atau stres yang abnormal.\n3. Data Anda akan dicatat dalam database aplikasi untuk digunakan dalam penelitian lebih lanjut.</string>
+    <string name="monitoring_consent1">1.Detak jantung dan tingkat stres Anda akan dipantau.</string>
+    <string name="monitoring_consent2">2.Ketika mencapai nilai tertentu, alarm atau peringatan akan dipicu untuk memberi Anda peringatan tentang detak jantung atau stres yang abnormal.</string>
+    <string name="monitoring_consent3">3.Data Anda akan dicatat dalam database aplikasi untuk digunakan dalam penelitian lebih lanjut.</string>
+    <string name="i_understand">Saya Mengerti</string>
+    <string name="cancel">Batal</string>
+    <string name="turn_on">Hidupkan Layanan</string>
+    <string name="turn_off_confirmation">Apakah anda ingin mematikan layanan ?</string>
+    <string name="show_declined_accounts">Akun Ditolak</string>
+    <string name="view_pending_requests">Permintaan Koneksi</string>
+    <string name="turn_on_monitoring">Hidupkan Layanan</string>
+    <string name="turn_off_monitoring">Matikan Layanan</string>
+    <string name="action_smartschiz_monitoring">Smartschiz Monitoring</string>
 </resources>

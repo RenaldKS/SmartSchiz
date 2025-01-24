@@ -35,11 +35,10 @@
         <!-- Delete Button -->
         <Button
             android:id="@+id/delete_button"
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Delete Connection"
-            android:textColor="#FF0000"
-            android:layout_marginTop="8dp" />
+            android:layout_marginTop="8dp"
+            android:text="Hapus" />
 
     </LinearLayout>
 </androidx.cardview.widget.CardView>

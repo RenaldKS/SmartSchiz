@@ -29,20 +29,7 @@ public class DashboardStressData implements Serializable {
     public int[] totalTime;
 
     // Method to broadcast stress value
-    public void broadcastStressValue(Context context) {
-        if (context == null) {
-            Log.e("DashboardStressData", "Context is null. Cannot broadcast stress value.");
-            return;
-        }
 
-        Intent intent = new Intent(ACTION_STRESS_DATA_UPDATED);
-        intent.putExtra(EXTRA_STRESS_VALUE, latestStressValue);
-        Log.d("DashboardStressData", "Broadcasting stress value: " + latestStressValue + ", Action: " + ACTION_STRESS_DATA_UPDATED);
-
-        context.sendBroadcast(intent);
-        Log.d("DashboardStressData", "Broadcasted stress value: " + latestStressValue + ", Action: " + ACTION_STRESS_DATA_UPDATED + " completed.");
-
-    }
 
     public static DashboardStressData compute(final DashboardFragment.DashboardData dashboardData, Context context) {
         final List<GBDevice> devices = GBApplication.app().getDeviceManager().getDevices();
@@ -109,7 +96,7 @@ public class DashboardStressData implements Serializable {
             if (latestSample != null) {
                 stressData.latestStressValue = latestSample.getStress();
                 Log.d("DashboardStressData", "About to broadcast stress value: " + stressData.latestStressValue);
-                stressData.broadcastStressValue(context); // Broadcast the stress value
+
             }
 
             Log.d("DashboardStressData", "Computed stress data: Average: " + stressData.value + ", Latest: " + stressData.latestStressValue);
