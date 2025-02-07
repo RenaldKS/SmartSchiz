@@ -160,7 +160,7 @@ public class PendingRequestActivity extends AppCompatActivity {
                                         String notificationTitle = "Pemberitahuan soal permintaan anda";
                                         String notificationMessage = "Permintaan Hubungkan Akun anda " +
                                                 (accepted ? "Diterima" : "Ditolak") +
-                                                " by " + loggedInUsername + ".";
+                                                " Oleh " + loggedInUsername + ".";
                                         sendFCMNotification(this, requesterFCMToken, notificationTitle, notificationMessage);
                                         Log.d(TAG, "Notification sent to requester: " + requesterUsername);
                                     } else {

@@ -41,27 +41,34 @@
     </ScrollView>
     <Button
         android:id="@+id/monitoringservice"
-        android:layout_width="wrap_content"
+        android:layout_width="250dp"
         android:layout_height="wrap_content"
         android:text="@string/monitoring_service"
-        android:layout_marginTop="8dp"
+        android:layout_marginTop="5dp"
         android:layout_gravity="center_horizontal"/>
     <!-- Button to send connection request -->
     <Button
-        android:id="@+id/sendRequestButton"
-        android:layout_width="wrap_content"
+        android:id="@+id/deletedata"
+        android:layout_width="250dp"
         android:layout_height="wrap_content"
-        android:text="Kirim Permintaan Koneksi Akun"
-        android:layout_marginTop="8dp"
-        android:layout_gravity="center_horizontal"/>
+        android:layout_gravity="center_horizontal"
+        android:layout_margin="5dp"
+        android:text="Delete Data" />
 
+    <Button
+        android:id="@+id/sendRequestButton"
+        android:layout_width="250dp"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginTop="5dp"
+        android:text="Kirim Permintaan Koneksi Akun" />
 
     <Button
         android:id="@+id/viewConnectedAccountsButton"
-        android:layout_width="wrap_content"
+        android:layout_width="250dp"
         android:layout_height="wrap_content"
         android:text="Lihat Akun yang Terhubung"
-        android:layout_marginTop="8dp"
+        android:layout_marginTop="5dp"
         android:layout_gravity="center_horizontal"/>
 
 

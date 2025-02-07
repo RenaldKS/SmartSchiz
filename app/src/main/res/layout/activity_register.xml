@@ -3,14 +3,14 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:background="@color/primary_dark"
+    android:background="@drawable/download_3"
     android:layout_height="match_parent"
     tools:context=".activities.RegisterActivity">
 
     <LinearLayout
         android:id="@+id/square"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
+        android:layout_width="310dp"
+        android:layout_height="430dp"
         android:orientation="vertical"
         android:padding="16dp"
         android:background="@color/primarytext_dark"
@@ -34,59 +34,59 @@
         <!-- Username EditText -->
         <EditText
             android:id="@+id/username"
-            android:layout_width="match_parent"
+            android:layout_width="292dp"
             android:layout_height="wrap_content"
+            android:layout_marginBottom="10dp"
             android:hint="Username"
             android:inputType="textPersonName"
-            android:padding="10dp"
-            android:layout_marginBottom="10dp"/>
+            android:padding="10dp" />
 
         <EditText
             android:id="@+id/email"
-            android:layout_width="match_parent"
+            android:layout_width="294dp"
             android:layout_height="wrap_content"
+            android:layout_marginBottom="10dp"
             android:hint="Email"
             android:inputType="textEmailAddress"
-            android:padding="10dp"
-            android:layout_marginBottom="10dp"/>
+            android:padding="10dp" />
 
         <EditText
             android:id="@+id/password"
-            android:layout_width="match_parent"
+            android:layout_width="296dp"
             android:layout_height="wrap_content"
+            android:layout_marginBottom="10dp"
             android:hint="Kata Sandi"
             android:inputType="textPassword"
-            android:padding="10dp"
-            android:layout_marginBottom="10dp"/>
+            android:padding="10dp" />
 
         <EditText
             android:id="@+id/confirm_password"
-            android:layout_width="match_parent"
+            android:layout_width="297dp"
             android:layout_height="wrap_content"
+            android:layout_marginBottom="20dp"
             android:hint="Konfirmasi Sandi"
             android:inputType="textPassword"
-            android:padding="10dp"
-            android:layout_marginBottom="20dp"/>
+            android:padding="10dp" />
 
         <Button
             android:id="@+id/register_button"
-            android:layout_width="match_parent"
+            android:layout_width="174dp"
             android:layout_height="wrap_content"
-            android:text="Daftar"
-            android:padding="10dp"
             android:layout_marginBottom="16dp"
-            android:textColor="@color/primarytext_dark"
-            android:background="@color/primary_light"/>
+            android:background="@color/primary_light"
+            android:padding="10dp"
+            android:text="Daftar"
+            android:textColor="@color/primarytext_dark" />
 
         <Button
             android:id="@+id/back_button"
-            android:layout_width="match_parent"
+            android:layout_width="176dp"
             android:layout_height="wrap_content"
-            android:text="Kembali"
-            android:padding="10dp"
             android:layout_marginBottom="16dp"
-            android:textColor="@color/primarytext_dark"
-            android:background="@color/primary_light"/>
+            android:background="@color/primary_light"
+            android:padding="10dp"
+            android:text="Kembali"
+            android:textColor="@color/primarytext_dark" />
     </LinearLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

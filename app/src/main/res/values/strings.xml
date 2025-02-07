@@ -5,9 +5,26 @@
     <string name="about_activity_title_generic">About SmartSchiz</string>
     <string name="about_description_generic">Cloudless copylefted libre replacement for closed source Android gadget apps from vendors.</string>
     <string name="gadgetbridge_running_generic">SmartSchiz running</string>
-    <string name="relaksasi_tips">**Teknik Relaksasi:**\n* Bernapas dalam\n* Meditasi singkat\n* Yoga atau peregangan ringan</string>
-    <string name="alihkan_perhatian">**Aktivitas Mengalihkan Perhatian:**\n* Membaca buku\n* Mendengarkan musik\n* Mewarnai atau menggambar\n* Berada di alam</string>
-    <string name="atasi_halusinasi">**Menghadapi Halusinasi:**\n* Kenali sebagai bagian dari kondisi\n* Jangan lawan, alihkan perhatian\n* Bicara dengan orang terdekat\n* Buat jadwal kegiatan</string>
+    <string name="relaksasi_tips">
+    Teknik Relaksasi: \n
+    1. Bernapas dalam\n
+    2. Meditasi singkat\n
+    3. Yoga atau peregangan ringan
+</string>
+    <string name="alihkan_perhatian">
+    Aktivitas Mengalihkan Perhatian:\n
+    1. Membaca buku\n
+    2. Mendengarkan musik\n
+    3. Mewarnai atau menggambar\n
+    4. Berada di alam
+</string>
+    <string name="atasi_halusinasi">
+    Menghadapi Halusinasi:\n
+    1. Kenali sebagai bagian dari kondisi\n
+    2. Jangan lawan, alihkan perhatian\n
+    3. Bicara dengan orang terdekat\n
+    4. Buat jadwal kegiatan
+</string>
 
     <string name="application_name_banglejs_main">Bangle.js Gadgetbridge</string>
     <string name="title_activity_controlcenter_banglejs_main">Bangle.js Gadgetbridge</string>

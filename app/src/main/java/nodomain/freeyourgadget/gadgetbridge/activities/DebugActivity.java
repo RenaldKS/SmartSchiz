@@ -939,12 +939,13 @@ public class DebugActivity extends AbstractGBActivity {
                     if (userQuerySnapshot != null && !userQuerySnapshot.isEmpty()) {
                         String currentUsername = userQuerySnapshot.getDocuments().get(0).getString("username");
 
+
                         Log.d(TAG, "sendNotificationsToConnectedAccounts: Found current username: " + currentUsername);
 
                         if (currentUsername != null) {
                             Log.d(TAG, "sendNotificationsToConnectedAccounts: Current username: " + currentUsername);
 
-                            // 2. Now use the username to construct the correct path
+
                             DocumentReference userConnectionDocument = db.collection("connectionRequests").document(currentUsername);
                             CollectionReference requestsSubcollection = userConnectionDocument.collection("requests");
 
@@ -956,7 +957,6 @@ public class DebugActivity extends AbstractGBActivity {
                                     .whereEqualTo("status", "accepted")
                                     .get()
                                     .addOnSuccessListener(querySnapshot -> {
-                                        // ... (Rest of the code remains the same: handling querySnapshot)
                                         if (querySnapshot != null) {
                                             Log.d(TAG, "sendNotificationsToConnectedAccounts: Query returned " + querySnapshot.size() + " documents.");
                                             if(querySnapshot.isEmpty()){
@@ -1042,7 +1042,8 @@ public class DebugActivity extends AbstractGBActivity {
 
     private String constructNotificationBody(int heartRate, int stressLevel, String username) {
         StringBuilder body = new StringBuilder();
-        body.append("Alert has been triggered for ").append(username);
+        body.append("Peringatan terjadi dari salah satu akun terhubung");
+        Log.d(TAG, "Alert has been trigger for " + username);
         if (heartRate != -1) {
             body.append(" (Abnormal heart rate: ").append(heartRate).append(")");
         }

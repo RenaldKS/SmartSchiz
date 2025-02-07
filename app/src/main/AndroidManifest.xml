@@ -62,9 +62,16 @@
     <!-- Used for background service -->
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION"/>
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_HEALTH"/>
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_CONNECTED_DEVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
     <uses-permission android:name="android.permission.REQUEST_COMPANION_RUN_IN_BACKGROUND" />
+
+    <uses-permission android:name="android.permission.BODY_SENSORS"/>
+    <uses-permission android:name="android.permission.BODY_SENSORS_BACKGROUND"/>
+    <uses-permission android:name="android.permission.ACTIVITY_RECOGNITION"/>
+    <uses-permission android:name="android.permission.HIGH_SAMPLING_RATE_SENSORS"/>
 
     <!-- Used for reverse find device -->
     <uses-permission android:name="android.permission.VIBRATE" />
@@ -172,7 +179,11 @@
         <activity
             android:name=".activities.AlarmActivity"
             android:label="@string/alarm_activity_label"
-            android:parentActivityName=".activities.ControlCenterv2" />
+            android:parentActivityName=".activities.ControlCenterv2"
+            android:launchMode="singleTop"
+            android:exported="true"
+            android:showWhenLocked="true"
+            android:turnScreenOn="true"/>
         <activity
             android:name=".activities.PendingRequestActivity"
             android:label="@string/pending_request_label"
@@ -501,8 +512,8 @@
         </service>
         <service
             android:name=".service.AlarmMonitoringService"
-            android:exported="false">
-        </service>
+            android:foregroundServiceType="health|location"
+            android:exported="false"/>
         <service
             android:name=".service.NotificationCollectorMonitorService"
             android:foregroundServiceType="specialUse">

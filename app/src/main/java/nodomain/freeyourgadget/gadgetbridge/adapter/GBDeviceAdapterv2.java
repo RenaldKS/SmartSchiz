@@ -34,10 +34,12 @@ import android.graphics.Color;
 import android.graphics.drawable.GradientDrawable;
 import android.graphics.drawable.Icon;
 import android.os.Build;
+import android.os.Handler;
 import android.text.Editable;
 import android.text.InputType;
 import android.text.TextUtils;
 import android.text.TextWatcher;
+import android.util.Log;
 import android.util.Pair;
 import android.util.TypedValue;
 import android.view.LayoutInflater;
@@ -143,8 +145,10 @@ public class GBDeviceAdapterv2 extends ListAdapter<GBDevice, GBDeviceAdapterv2.V
     private String expandedDeviceAddress = "";
     private String expandedFolderName = "";
     private ViewGroup parent;
+
     private HashMap<String, long[]> deviceActivityMap = new HashMap();
     private final StableIdGenerator idGenerator = new StableIdGenerator();
+
 
     public GBDeviceAdapterv2(Context context, List<GBDevice> deviceList, HashMap<String,long[]> deviceMap) {
         super(new GBDeviceDiffUtil());
@@ -461,6 +465,7 @@ public class GBDeviceAdapterv2 extends ListAdapter<GBDevice, GBDeviceAdapterv2.V
                                                         public void onClick(View v) {
                                                             showTransientSnackbar(R.string.busy_task_fetch_activity_data);
                                                             GBApplication.deviceService(device).onFetchRecordedData(RecordedDataTypes.TYPE_SYNC);
+                                                            Log.d("GBDeviceAdapterv2","Fetching Actitivy Data");
                                                         }
                                                     }
         );

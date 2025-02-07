@@ -25,6 +25,7 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
@@ -71,10 +72,7 @@ public class ShowAlarmDataActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
 
         setContentView(R.layout.activity_show_alarm_data);
-
-
         dropdownMenu = findViewById(R.id.spinnerConnectedUsers);
-
         FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
         if (user != null) {
             fetchCurrentUsernameAndData(user.getEmail());
@@ -82,11 +80,15 @@ public class ShowAlarmDataActivity extends AppCompatActivity {
             Toast.makeText(this, "User not authenticated", Toast.LENGTH_SHORT).show();
             finish();
         }
-
         Button sendRequestButton = findViewById(R.id.sendRequestButton);
         sendRequestButton.setOnClickListener(v -> {
             Log.d(TAG, "Send request button clicked");
             showEmailInputDialog();
+        });
+        Button deletealarmdata = findViewById(R.id.deletedata);
+        deletealarmdata.setOnClickListener(v -> {
+            Log.d(TAG,"Showing Delete Confirmation Dialog");
+            showDeleteConfirmationDialog();
         });
 
         Button viewConnectedAccountsButton = findViewById(R.id.viewConnectedAccountsButton);
@@ -96,7 +98,6 @@ public class ShowAlarmDataActivity extends AppCompatActivity {
             Intent intent = new Intent(this, ConnectedAccountActivity.class);
             startActivity(intent);
         });
-
         // Initialize the monitoring service button
         monitoringServiceButton = findViewById(R.id.monitoringservice);
         SharedPreferences prefs = getSharedPreferences("monitoring_state", MODE_PRIVATE);
@@ -110,7 +111,6 @@ public class ShowAlarmDataActivity extends AppCompatActivity {
                 showTurnOnMonitoringDialog();
             }
         });
-
         // Set up the turn off dialog
         turnOffDialog = new AlertDialog.Builder(this)
                 .setView(R.layout.dialog_turn_off_monitoring)
@@ -126,7 +126,6 @@ public class ShowAlarmDataActivity extends AppCompatActivity {
                 turnOffDialog.dismiss();
             });
         });
-
         // Set up the turn on dialog
         turnOnDialog = new AlertDialog.Builder(this)
                 .setView(R.layout.dialog_turn_on_monitoring)
@@ -152,8 +151,18 @@ public class ShowAlarmDataActivity extends AppCompatActivity {
                 }
             });
         });
-
     }
+    private void showDeleteConfirmationDialog() {
+        new AlertDialog.Builder(this)
+                .setTitle("Hapus Data Peringatan")
+                .setMessage("Apakah Anda yakin ingin menghapus semua data peringatan?")
+                .setPositiveButton("Hapus", (dialog, which) -> {
+                    deleteAlarmData(); // Proceed with deletion if user confirms
+                })
+                .setNegativeButton("Batal", (dialog, which) -> dialog.dismiss()) // Cancel and close dialog
+                .show();
+    }
+
     private void showTurnOffMonitoringDialog() {
         if (!turnOffDialog.isShowing()) {
             turnOffDialog.show();
@@ -176,14 +185,16 @@ public class ShowAlarmDataActivity extends AppCompatActivity {
     }
 
     private void stopMonitoringService() {
-        Intent serviceIntent = new Intent(this, AlarmMonitoringService.class);
-        stopService(serviceIntent);
-        isMonitoring = false;
+        Intent stopIntent = new Intent(this, AlarmMonitoringService.class);
+        stopIntent.setAction("STOP_SERVICE");
+        startService(stopIntent);
 
+        isMonitoring = false;
         SharedPreferences prefs = getSharedPreferences("monitoring_state", MODE_PRIVATE);
         prefs.edit().putBoolean("is_monitoring", false).apply();
         updateMonitoringServiceButtonText();
     }
+
     private void updateMonitoringServiceButtonText() {
         if (isMonitoring) {
             monitoringServiceButton.setText(R.string.turn_off_monitoring);
@@ -239,6 +250,7 @@ public class ShowAlarmDataActivity extends AppCompatActivity {
     }
 
 
+
     private void fetchConnectedAccounts(String username) {
         FirebaseFirestore db = FirebaseFirestore.getInstance();
         db.collection("connectionRequests")
@@ -249,7 +261,7 @@ public class ShowAlarmDataActivity extends AppCompatActivity {
                 .addOnCompleteListener(task -> {
                     if (task.isSuccessful() && task.getResult() != null) {
                         connectedUsers.clear();
-                        connectedUsers.add("My Data"); // Add logged-in user's data as the first option
+                        connectedUsers.add("Data Saya"); // Add logged-in user's data as the first option
 
                         for (QueryDocumentSnapshot document : task.getResult()) {
                             String requesterUsername = document.getString("requesterUsername");
@@ -278,7 +290,7 @@ public class ShowAlarmDataActivity extends AppCompatActivity {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
                 String selectedUser = connectedUsers.get(position);
-                if (selectedUser.equals("My Data")) {
+                if (selectedUser.equals("Data Saya")) {
                     fetchAlarmData(currentUsername);
                 } else {
                     fetchAlarmData(selectedUser);
@@ -314,7 +326,61 @@ public class ShowAlarmDataActivity extends AppCompatActivity {
             dataContainer.addView(divider);
         }
     }
+    private void deleteAlarmData() {
+        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+        if (user == null) {
+            Log.w(TAG, "User not authenticated, cannot delete alarm data");
+            Toast.makeText(this, "Anda harus login untuk menghapus data", Toast.LENGTH_SHORT).show();
+            return;
+        }
 
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+
+        // Fetch username from Firestore using UID
+        db.collection("users")
+                .whereEqualTo("UID", user.getUid()) // Query based on UID
+                .get()
+                .addOnSuccessListener(querySnapshot -> {
+                    if (!querySnapshot.isEmpty()) {
+                        String username = querySnapshot.getDocuments().get(0).getString("username");
+
+                        if (username != null) {
+                            // Reference to the "data" subcollection
+                            CollectionReference alarmDataRef = db.collection("alarmData")
+                                    .document(username)
+                                    .collection("data");
+
+                            // Fetch all documents and delete them
+                            alarmDataRef.get().addOnSuccessListener(querySnapshot1 -> {
+                                if (!querySnapshot1.isEmpty()) {
+                                    for (QueryDocumentSnapshot document : querySnapshot1) {
+                                        alarmDataRef.document(document.getId()).delete()
+                                                .addOnSuccessListener(aVoid -> Log.d(TAG, "Deleted alarm data: " + document.getId()))
+                                                .addOnFailureListener(e -> Log.w(TAG, "Error deleting document", e));
+                                    }
+                                    Toast.makeText(this, "Data peringatan berhasil dihapus", Toast.LENGTH_SHORT).show();
+                                } else {
+                                    Toast.makeText(this, "Tidak ada data peringatan untuk dihapus", Toast.LENGTH_SHORT).show();
+                                }
+                            }).addOnFailureListener(e -> {
+                                Log.w(TAG, "Error fetching alarm data", e);
+                                Toast.makeText(this, "Gagal mengambil data peringatan", Toast.LENGTH_SHORT).show();
+                            });
+
+                        } else {
+                            Log.w(TAG, "Username not found for user");
+                            Toast.makeText(this, "Username tidak ditemukan", Toast.LENGTH_SHORT).show();
+                        }
+                    } else {
+                        Log.w(TAG, "No user document found for UID: " + user.getUid());
+                        Toast.makeText(this, "Dokumen pengguna tidak ditemukan", Toast.LENGTH_SHORT).show();
+                    }
+                })
+                .addOnFailureListener(e -> {
+                    Log.w(TAG, "Error fetching user data", e);
+                    Toast.makeText(this, "Gagal mendapatkan data pengguna", Toast.LENGTH_SHORT).show();
+                });
+    }
     private void showEmailInputDialog() {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle("Masukan email akun yang dituju");
@@ -353,7 +419,7 @@ public class ShowAlarmDataActivity extends AppCompatActivity {
 
         Log.d(TAG, "sendConnectionRequest: Current username: " + requesterUsername);
 
-        // Fetch the requester's FCM token
+        // Fetch requester's FCM token
         db.collection("users")
                 .document(requesterUsername)
                 .get()
@@ -379,40 +445,95 @@ public class ShowAlarmDataActivity extends AppCompatActivity {
                                         Log.d(TAG, "sendConnectionRequest: Target username: " + targetUsername);
                                         Log.d(TAG, "sendConnectionRequest: Target FCM token: " + targetFcmToken);
 
-                                        // Build request data
-                                        Map<String, Object> request = new HashMap<>();
-                                        request.put("requesterUsername", requesterUsername);
-                                        request.put("requesterEmail", requesterEmail);
-                                        request.put("requesterId", requesterId);
-                                        request.put("requesterFCMToken", requesterFCMToken);
-                                        request.put("targetUsername", targetUsername);
-                                        request.put("targetEmail", targetEmail);
-                                        request.put("targetUserId", targetUserId);
-                                        request.put("status", "pending");
-                                        request.put("timestamp", FieldValue.serverTimestamp());
-
-                                        Log.d(TAG, "sendConnectionRequest: Saving connection request to Firestore...");
+                                        // **Check if a request already exists (Pending or Accepted)**
                                         db.collection("connectionRequests")
                                                 .document(targetUsername)
                                                 .collection("requests")
-                                                .add(request)
-                                                .addOnSuccessListener(unused -> {
-                                                    Log.d(TAG, "sendConnectionRequest: Request saved for user: " + targetUsername);
-                                                    Toast.makeText(this, "Permintaan Sukses dikirim", Toast.LENGTH_SHORT).show();
+                                                .whereEqualTo("requesterUsername", requesterUsername)
+                                                .get()
+                                                .addOnSuccessListener(requestQuery -> {
+                                                    boolean alreadyRequested = false;
+                                                    boolean alreadyConnected = false;
 
-                                                    if (targetFcmToken != null && !targetFcmToken.isEmpty()) {
-                                                        Log.d(TAG, "sendConnectionRequest: Sending FCM notification...");
-                                                        sendFCMNotification(this, targetFcmToken,
-                                                                "Connection Request",
-                                                                "You have a new connection request from " + requesterUsername);
-                                                    } else {
-                                                        Log.w(TAG, "sendConnectionRequest: No valid FCM token for user: " + targetUsername);
+                                                    for (QueryDocumentSnapshot doc : requestQuery) {
+                                                        String status = doc.getString("status");
+                                                        if ("pending".equals(status)) {
+                                                            alreadyRequested = true;
+                                                            break; // No need to continue checking
+                                                        } else if ("accepted".equals(status)) {
+                                                            alreadyConnected = true;
+                                                            break; // No need to continue checking
+                                                        }
                                                     }
+
+                                                    if (alreadyConnected) {
+                                                        Toast.makeText(
+                                                                this,
+                                                                "Kamu sudah terhubung dengan " + targetUsername,
+                                                                Toast.LENGTH_SHORT
+                                                        ).show();
+                                                        Log.d(TAG, "sendConnectionRequest: Already connected with " + targetUsername);
+                                                        return;
+                                                    }
+
+                                                    if (alreadyRequested) {
+                                                        Toast.makeText(
+                                                                this,
+                                                                "Permintaan sudah dikirim ke " + targetUsername,
+                                                                Toast.LENGTH_SHORT
+                                                        ).show();
+                                                        Log.d(TAG, "sendConnectionRequest: Request already pending for " + targetUsername);
+                                                        return;
+                                                    }
+
+                                                    // **Send Connection Request since no existing request found**
+                                                    Map<String, Object> request = new HashMap<>();
+                                                    request.put("requesterUsername", requesterUsername);
+                                                    request.put("requesterEmail", requesterEmail);
+                                                    request.put("requesterId", requesterId);
+                                                    request.put("requesterFCMToken", requesterFCMToken);
+                                                    request.put("targetUsername", targetUsername);
+                                                    request.put("targetEmail", targetEmail);
+                                                    request.put("targetUserId", targetUserId);
+                                                    request.put("status", "pending");
+                                                    request.put("timestamp", FieldValue.serverTimestamp());
+
+                                                    Log.d(TAG, "sendConnectionRequest: Saving connection request to Firestore...");
+                                                    db.collection("connectionRequests")
+                                                            .document(targetUsername)
+                                                            .collection("requests")
+                                                            .add(request)
+                                                            .addOnSuccessListener(unused -> {
+                                                                Log.d(TAG, "sendConnectionRequest: Request saved for user: " + targetUsername);
+                                                                Toast.makeText(
+                                                                        this,
+                                                                        "Permintaan sukses dikirim",
+                                                                        Toast.LENGTH_SHORT
+                                                                ).show();
+
+                                                                if (targetFcmToken != null && !targetFcmToken.isEmpty()) {
+                                                                    Log.d(TAG, "sendConnectionRequest: Sending FCM notification...");
+                                                                    sendFCMNotification(
+                                                                            this,
+                                                                            targetFcmToken,
+                                                                            "Permintaan Terhubung",
+                                                                            "Anda Memiliki Permintaan Terhubung Dari " + requesterUsername
+                                                                    );
+                                                                } else {
+                                                                    Log.w(TAG, "sendConnectionRequest: No valid FCM token for user: " + targetUsername);
+                                                                }
+                                                            })
+                                                            .addOnFailureListener(e -> {
+                                                                Log.e(TAG, "sendConnectionRequest: Firestore request save failed", e);
+                                                                Toast.makeText(this, "Gagal mengirim permintaan. Coba lagi.", Toast.LENGTH_SHORT).show();
+                                                            });
+
                                                 })
                                                 .addOnFailureListener(e -> {
-                                                    Log.e(TAG, "sendConnectionRequest: Firestore request save failed", e);
-                                                    Toast.makeText(this, "Gagal mengirim permintaan. Coba lagi.", Toast.LENGTH_SHORT).show();
+                                                    Log.e(TAG, "sendConnectionRequest: Error checking existing requests", e);
+                                                    Toast.makeText(this, "Gagal memeriksa permintaan sebelumnya.", Toast.LENGTH_SHORT).show();
                                                 });
+
                                     } else {
                                         Log.w(TAG, "sendConnectionRequest: No user found with email: " + targetEmail);
                                         Toast.makeText(this, "Email tidak ditemukan", Toast.LENGTH_SHORT).show();
@@ -422,6 +543,7 @@ public class ShowAlarmDataActivity extends AppCompatActivity {
                                     Log.e(TAG, "sendConnectionRequest: Error querying user by email", e);
                                     Toast.makeText(this, "Gagal mencari akun yang dituju, coba lagi.", Toast.LENGTH_SHORT).show();
                                 });
+
                     } else {
                         Log.w(TAG, "sendConnectionRequest: Requester document not found or missing FCM token.");
                         Toast.makeText(this, "Gagal mendapatkan FCM token pengirim.", Toast.LENGTH_SHORT).show();
@@ -432,7 +554,6 @@ public class ShowAlarmDataActivity extends AppCompatActivity {
                     Toast.makeText(this, "Gagal mendapatkan data pengirim. Coba lagi.", Toast.LENGTH_SHORT).show();
                 });
     }
-
 
     private void sendFCMNotification(Context context, String token, String title, String body) {
         Log.d(TAG, "sendFCMNotification: Preparing to send notification. Title: " + title + ", Body: " + body);

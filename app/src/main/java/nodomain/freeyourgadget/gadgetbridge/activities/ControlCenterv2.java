@@ -39,10 +39,12 @@ import android.os.Bundle;
 import android.provider.Settings;
 import android.telephony.PhoneStateListener;
 import android.telephony.TelephonyManager;
+import android.util.Log;
 import android.util.TypedValue;
 import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.activity.result.ActivityResultLauncher;
@@ -71,6 +73,8 @@ import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.navigation.NavigationView;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.firestore.FirebaseFirestore;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -192,6 +196,12 @@ public class ControlCenterv2 extends AppCompatActivity
         // Initialize drawer
         NavigationView drawerNavigationView = findViewById(R.id.nav_view);
         drawerNavigationView.setNavigationItemSelectedListener(this);
+        // Get Navigation Drawer Header
+        View headerView = drawerNavigationView.getHeaderView(0);
+        TextView usernameTextView = headerView.findViewById(R.id.nav_header_username);
+
+// Fetch username and set it in the header
+        fetchCurrentUsername(usernameTextView);
 
         // Initialize bottom navigation
         BottomNavigationView navigationView = findViewById(R.id.bottom_nav_bar);
@@ -362,6 +372,32 @@ public class ControlCenterv2 extends AppCompatActivity
         }
 
         GBApplication.deviceService().requestDeviceInfo();
+    }
+
+    private void fetchCurrentUsername(TextView usernameTextView) {
+        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+        if (user != null) {
+            FirebaseFirestore db = FirebaseFirestore.getInstance();
+            String userEmail = user.getEmail(); // Get user email
+
+            db.collection("users")
+                    .whereEqualTo("email", userEmail) // Find the user document by email
+                    .get()
+                    .addOnSuccessListener(querySnapshot -> {
+                        if (!querySnapshot.isEmpty()) {
+                            String username = querySnapshot.getDocuments().get(0).getId(); // Username is the document ID
+                            usernameTextView.setText("Hello," +(username)); // Update the UI
+                        } else {
+                            usernameTextView.setText("Unknown User");
+                        }
+                    })
+                    .addOnFailureListener(e -> {
+                        usernameTextView.setText("Error loading user");
+                        Log.e("ControlCenterv2", "Failed to fetch username", e);
+                    });
+        } else {
+            usernameTextView.setText("Not Logged In");
+        }
     }
 
     @Override

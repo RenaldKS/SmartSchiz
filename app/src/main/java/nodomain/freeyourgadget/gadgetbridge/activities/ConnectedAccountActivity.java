@@ -149,12 +149,12 @@ public class    ConnectedAccountActivity extends AppCompatActivity {
                 .document(documentId)
                 .update("status", "declined")
                 .addOnSuccessListener(aVoid -> {
-                    Toast.makeText(this, "Permintaan berhasil ditolak", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(this, "Permintaan berhasil dihapus", Toast.LENGTH_SHORT).show();
                     fetchConnectedAccountsForUser(currentUsername); // Refresh the list after updating
                 })
                 .addOnFailureListener(e -> {
                     Log.w("ConnectedAccounts", "Error declining connection", e);
-                    Toast.makeText(this, "Gagal menolak permintaan", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(this, "Gagal menghapus permintaan", Toast.LENGTH_SHORT).show();
                 });
     }
 }

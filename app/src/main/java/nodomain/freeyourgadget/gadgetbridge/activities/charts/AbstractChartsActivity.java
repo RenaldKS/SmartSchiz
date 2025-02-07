@@ -23,6 +23,8 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Bundle;
+import android.os.Handler;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.ViewGroup;
@@ -57,6 +59,7 @@ import nodomain.freeyourgadget.gadgetbridge.GBApplication;
 import nodomain.freeyourgadget.gadgetbridge.R;
 import nodomain.freeyourgadget.gadgetbridge.activities.AbstractGBFragmentActivity;
 import nodomain.freeyourgadget.gadgetbridge.impl.GBDevice;
+import nodomain.freeyourgadget.gadgetbridge.service.AlarmMonitoringService;
 import nodomain.freeyourgadget.gadgetbridge.util.DateTimeUtils;
 import nodomain.freeyourgadget.gadgetbridge.util.GB;
 
@@ -65,13 +68,17 @@ public abstract class AbstractChartsActivity extends AbstractGBFragmentActivity 
 
     public static final String STATE_START_DATE = "stateStartDate";
     public static final String STATE_END_DATE = "stateEndDate";
+    private Handler refreshHandler = new Handler(); // Create a Handler instance
+    private Runnable refreshRunnable;
 
+    private static final String TAG = "AbstractChartsActivity";
     public static final String EXTRA_FRAGMENT_ID = "fragmentId";
     public static final String EXTRA_SINGLE_FRAGMENT_NAME = "singleFragmentName";
     public static final String EXTRA_ACTIONBAR_TITLE = "actionbarTitle";
     public static final String EXTRA_TIMESTAMP = "timestamp";
 
     private TextView mDateControl;
+    private static final long FETCHING_TASK_MINUTE = 5 * 60 * 1000;
 
     private Date mStartDate;
     private Date mEndDate;
@@ -125,6 +132,14 @@ public abstract class AbstractChartsActivity extends AbstractGBFragmentActivity 
         if (extras == null) {
             throw new IllegalArgumentException("Must provide a device when invoking this activity");
         }
+        refreshRunnable = new Runnable() {
+            @Override
+            public void run() {
+                fetchRecordedData();
+                refreshHandler.postDelayed(this, FETCHING_TASK_MINUTE);
+            }
+        };
+        refreshHandler.post(refreshRunnable);
 
         mGBDevice = extras.getParcelable(GBDevice.EXTRA_DEVICE);
 
@@ -352,6 +367,8 @@ public abstract class AbstractChartsActivity extends AbstractGBFragmentActivity 
     private void fetchRecordedData() {
         if (getDevice().isInitialized()) {
             GBApplication.deviceService(getDevice()).onFetchRecordedData(getRecordedDataType());
+            Log.d("AlarmMonitoringService", "Fetching Data...");
+            GB.toast(this, "Updating Data..",Toast.LENGTH_SHORT,GB.INFO);
         } else {
             swipeLayout.setRefreshing(false);
             GB.toast(this, getString(R.string.device_not_connected), Toast.LENGTH_SHORT, GB.ERROR);

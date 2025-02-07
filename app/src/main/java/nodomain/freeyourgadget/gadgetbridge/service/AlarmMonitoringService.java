@@ -11,12 +11,19 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
+import android.content.pm.ServiceInfo;
 import android.location.Location;
+import android.os.Build;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Looper;
 import android.util.Log;
 import android.widget.Toast;
+import android.media.RingtoneManager;
+import android.media.Ringtone;
+import android.media.AudioAttributes;
+import android.media.AudioManager;
+import android.net.Uri;
 
 import androidx.core.app.ActivityCompat;
 import androidx.core.app.NotificationCompat;
@@ -46,12 +53,15 @@ import java.util.concurrent.Executors;
 import nodomain.freeyourgadget.gadgetbridge.GBApplication;
 import nodomain.freeyourgadget.gadgetbridge.R;
 import nodomain.freeyourgadget.gadgetbridge.activities.AlarmActivity;
+import nodomain.freeyourgadget.gadgetbridge.activities.charts.AbstractChartsActivity;
 import nodomain.freeyourgadget.gadgetbridge.activities.dashboard.data.DashboardStressData;
 import nodomain.freeyourgadget.gadgetbridge.impl.GBDevice;
 import nodomain.freeyourgadget.gadgetbridge.model.ActivitySample;
 import nodomain.freeyourgadget.gadgetbridge.model.DeviceService;
+import nodomain.freeyourgadget.gadgetbridge.model.RecordedDataTypes;
 import nodomain.freeyourgadget.gadgetbridge.model.StressSample;
 import nodomain.freeyourgadget.gadgetbridge.util.FCMAccessTokenProvider;
+import nodomain.freeyourgadget.gadgetbridge.util.GB;
 import nodomain.freeyourgadget.gadgetbridge.util.StressDataUtils;
 import okhttp3.Call;
 import okhttp3.Callback;
@@ -64,7 +74,6 @@ import okhttp3.Response;
 public class AlarmMonitoringService extends Service {
     private static final String TAG = "AlarmMonitoringService";
     private static final long THREE_MINUTES = 3 * 60 * 1000;
-    private long firstAbnormalTimestamp = -1;
     private boolean isAlarmTriggered = false;
     private FusedLocationProviderClient fusedLocationClient;
     private int currentHeartRate = -1; // Store the latest heart rate
@@ -72,11 +81,11 @@ public class AlarmMonitoringService extends Service {
     private long heartRateAbnormalStartTime = -1;
     private long stressLevelAbnormalStartTime = -1;
     private static final long ONE_MINUTE = 60 * 1000; // 1 minute in milliseconds
-
+    private static final long FIVE_MINUTE = 5 * 60 * 1000;
     private Handler handler; // Handler for periodic tasks
     private Runnable stressFetchRunnable;
     private long lastAlarmTriggeredTime = -1;
-    private static final long COOLDOWN_PERIOD = 5 * 60 * 1000; // 1-minute cooldow
+    private static final long COOLDOWN_PERIOD = 10 * 60 * 1000; // 5-minute cooldow
 
     private final BroadcastReceiver mReceiver = new BroadcastReceiver() {
         @Override
@@ -90,8 +99,10 @@ public class AlarmMonitoringService extends Service {
                     if (sample instanceof ActivitySample) {
                         currentHeartRate = ((ActivitySample) sample).getHeartRate();
                         checkAndHandleAbnormalReadings(System.currentTimeMillis());
+                        isHeartRateTestInProgress = false;
                     } else {
                         Log.d(TAG, "Unknown heartrate sample type received ");
+                        isHeartRateTestInProgress = false;
                     }
                 }
             } else if (DashboardStressData.ACTION_STRESS_DATA_UPDATED.equals(intent.getAction())) {
@@ -112,8 +123,8 @@ public class AlarmMonitoringService extends Service {
         }
     };
     private void checkAndHandleAbnormalReadings(long currentTime) {
-        boolean heartRateAbnormal = currentHeartRate != -1 && (currentHeartRate < 60 || currentHeartRate > 130);
-        boolean stressLevelAbnormal = currentStressLevel != -1 && currentStressLevel > 75;
+        boolean heartRateAbnormal = currentHeartRate != -1 && (currentHeartRate < 40 || currentHeartRate > 130 );
+        boolean stressLevelAbnormal = currentStressLevel != -1 && currentStressLevel > 70;
 
         Log.d(TAG, "Current Heart Rate: " + currentHeartRate + ", Current Stress Level: " + currentStressLevel);
 
@@ -131,13 +142,14 @@ public class AlarmMonitoringService extends Service {
                 }
             } else {
                 long elapsedTime = currentTime - heartRateAbnormalStartTime;
-                Log.d(TAG, "Heart rate still abnormal. Elapsed time: " + elapsedTime + " ms. Remaining: " + (THREE_MINUTES - elapsedTime) + " ms");
+                long elapsedSeconds = elapsedTime / 1000;  // Convert milliseconds to seconds
+                Log.d(TAG, "Heart rate still abnormal. Elapsed time: " + elapsedSeconds + " s. Remaining: " + (THREE_MINUTES - elapsedSeconds) + " s");
             }
         } else {
             if (heartRateAbnormalStartTime != -1) {
                 Log.d(TAG, "Heart rate returned to normal.");
             }
-            heartRateAbnormalStartTime = -1; // Reset if heart rate becomes normal
+            heartRateAbnormalStartTime = -1; //
         }
 
         if (stressLevelAbnormal) {
@@ -153,8 +165,9 @@ public class AlarmMonitoringService extends Service {
                     stressLevelAbnormalStartTime = -1; // Reset the timer after triggering the alarm
                 }
             } else {
-                long elapsedTime = currentTime - stressLevelAbnormalStartTime;
-                Log.d(TAG, "Stress level still high. Elapsed time: " + elapsedTime + " ms. Remaining: " + (THREE_MINUTES - elapsedTime) + " ms");
+                    long elapsedTime = currentTime - stressLevelAbnormalStartTime;
+                    long elapsedSeconds = elapsedTime / 1000;  // Convert milliseconds to seconds
+                    Log.d(TAG, "Stress level still high. Elapsed time: " + elapsedSeconds + " s. Remaining: " + (THREE_MINUTES - elapsedSeconds) + " s");
             }
         } else {
             if (stressLevelAbnormalStartTime != -1) {
@@ -166,54 +179,153 @@ public class AlarmMonitoringService extends Service {
 
 
     private void triggerAlarm(long timestamp, int heartRate, int stressLevel) {
+        // 1. Check Cooldown FIRST (and isAlarmTriggered flag)
+        if (isAlarmTriggered) {
+            Log.d(TAG, "Alarm is already triggered. Skipping (cooldown active).");
+            return;
+        }
         if (lastAlarmTriggeredTime != -1 && (timestamp - lastAlarmTriggeredTime) < COOLDOWN_PERIOD) {
             Log.d(TAG, "Cooldown period active. Alarm not triggered.");
             return;
         }
 
-        lastAlarmTriggeredTime = timestamp; // Update the last alarm time
-        isAlarmTriggered = true;
+        // 2. Set isAlarmTriggered BEFORE other actions
+        isAlarmTriggered = true;  // Set the flag *before* doing anything else.
+        lastAlarmTriggeredTime = timestamp; // Update last triggered time
+
         Log.d(TAG, "Triggering alarm...");
 
+        // 3. Save Data and Send Notifications (These should be fast operations)
         saveAlarmTriggeredDataToFirestore(timestamp, heartRate, stressLevel);
         sendNotificationsToConnectedAccounts(heartRate, stressLevel);
 
+        // 4. Show Notification (This can be shown while the activity starts)
+        showAlarmNotification(); // Pass heartRate and stressLevel
+
+        // 5. Start Alarm Activity (Crucial for immediate attention)
         Intent alarmIntent = new Intent(this, AlarmActivity.class);
-        alarmIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        alarmIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK |
+                Intent.FLAG_ACTIVITY_CLEAR_TOP |
+                Intent.FLAG_ACTIVITY_SINGLE_TOP |
+                Intent.FLAG_ACTIVITY_NO_USER_ACTION |
+                Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
         startActivity(alarmIntent);
+
+
+        // 6. Reset isAlarmTriggered (using the main looper's handler)
+        new Handler(Looper.getMainLooper()).postDelayed(() -> {
+            isAlarmTriggered = false;
+            Log.d(TAG, "isAlarmTriggered reset after cooldown.");
+        }, COOLDOWN_PERIOD);
     }
-    private void showForegroundNotification() {
+
+    @Override
+    public int onStartCommand(Intent intent, int flags, int startId) {
+        if (intent != null) {
+            if ("STOP_SERVICE".equals(intent.getAction())) {
+                stopSelf();
+                return START_NOT_STICKY; // Ensures service does NOT restart
+            }
+            if ("RESET_ALARM_TRIGGERED".equals(intent.getAction())) {
+                isAlarmTriggered = false;
+                Log.d(TAG, "Alarm triggered flag reset.");
+            }
+        }
+        createForegroundNotification();
+        return START_STICKY; // Keeps service running unless explicitly stopped
+    }
+
+    private void createForegroundNotification() {
         NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-        String channelId = "alarm_notification_channel";
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
-            NotificationChannel channel = new NotificationChannel(channelId, "Alarm Notifications",
-                    NotificationManager.IMPORTANCE_HIGH);
+        String channelId = "alarm_monitoring_channel";
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            NotificationChannel channel = new NotificationChannel(
+                    channelId,
+                    "Alarm Monitoring",
+                    NotificationManager.IMPORTANCE_HIGH
+            );
+            channel.setDescription("Monitoring for abnormal heart rate and stress.");
+            channel.enableVibration(true);
+            channel.enableLights(true);
+            channel.setVibrationPattern(new long[]{0, 1000, 1000});
+            channel.setLockscreenVisibility(Notification.VISIBILITY_PUBLIC);
             notificationManager.createNotificationChannel(channel);
         }
 
+        // Intent to launch the AlarmActivity when notification is clicked
         Intent intent = new Intent(this, AlarmActivity.class);
-        PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+        PendingIntent pendingIntent = PendingIntent.getActivity(
+                this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
+        );
 
         Notification notification = new NotificationCompat.Builder(this, channelId)
-                .setContentTitle("Health Alert")
-                .setContentText("Abnormal heart rate or stress detected. Tap to view details.")
-                .setContentIntent(pendingIntent)
+                .setContentTitle("Monitoring Active")
+                .setContentText("Monitoring for abnormal heart rate and stress.")
+                .setSmallIcon(R.drawable.ic_heart)
                 .setPriority(NotificationCompat.PRIORITY_HIGH)
-                .setAutoCancel(true)
+                .setCategory(NotificationCompat.CATEGORY_SERVICE)
+                .setContentIntent(pendingIntent)
+                .setOngoing(true) // Prevent user from swiping it away
                 .build();
 
-        notificationManager.notify(1, notification);
-    }
-    @Override
-    public int onStartCommand(Intent intent, int flags, int startId) {
-        if (intent != null && "RESET_ALARM_TRIGGERED".equals(intent.getAction())) {
-            isAlarmTriggered = false;
-            Log.d(TAG, "Alarm triggered flag reset.");
-        }
-        return super.onStartCommand(intent, flags, startId);
+        startForeground(1, notification);
     }
 
-        private void saveAlarmTriggeredDataToFirestore(long timestamp, int heartRate, int stressLevel) {
+
+    private void showAlarmNotification() {
+        NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+        String channelId = "alarm_notification_channel"; // Keep a separate channel
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            NotificationChannel channel = new NotificationChannel(
+                    channelId,
+                    "Alarm Alerts",
+                    NotificationManager.IMPORTANCE_HIGH  // CRITICAL: High Importance
+            );
+            channel.setDescription("Emergency alarm triggered due to abnormal heart rate.");
+            channel.setLockscreenVisibility(Notification.VISIBILITY_PUBLIC); // Show on lock screen
+            channel.enableVibration(true);
+            channel.setVibrationPattern(new long[]{0, 500, 1000, 500, 1000}); // Stronger pattern
+            // ALARM SOUND
+            Uri alarmSound = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM);
+            if (alarmSound == null) {
+                alarmSound = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION); // Fallback
+            }
+            channel.setSound(alarmSound, null); // Set the sound on the channel
+            notificationManager.createNotificationChannel(channel);
+        }
+
+        // 🔥 Intent to force AlarmActivity to open (FULL SCREEN INTENT)
+        Intent fullScreenIntent = new Intent(this, AlarmActivity.class);
+        fullScreenIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
+        PendingIntent fullScreenPendingIntent = PendingIntent.getActivity(
+                this, 0, fullScreenIntent, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
+        );
+
+        // 🔥 Build a full-screen notification
+        NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(this, channelId)
+                .setSmallIcon(R.drawable.ic_heart) // Use an appropriate icon
+                .setContentTitle("🚨 ALARM TRIGGERED!") // Clear and attention-grabbing title
+                .setContentText("Abnormal heart rate detected! Tap to open.") // Informative text
+                .setPriority(NotificationCompat.PRIORITY_MAX) // CRITICAL: Max priority
+                .setCategory(NotificationCompat.CATEGORY_ALARM) // CRITICAL: Alarm category
+                .setVisibility(NotificationCompat.VISIBILITY_PUBLIC) // Show on lock screen
+                .setOngoing(false) // IMPORTANT: Not ongoing (alarms are dismissible)
+                .setFullScreenIntent(fullScreenPendingIntent, true) // CRITICAL: Full screen intent
+                .setDefaults(Notification.DEFAULT_ALL) // Use default sound, vibration, and lights (for compatibility)
+                .setVibrate(new long[]{0, 500, 1000, 500, 1000}) // Stronger vibration pattern
+                .setSound(RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM)) // CRITICAL: Alarm sound
+                .setAutoCancel(false); // Do NOT auto-cancel (user must take action)
+
+
+        Notification notification = notificationBuilder.build();
+        notificationManager.notify(1001, notification); // Use a unique notification ID
+    }
+
+
+
+    private void saveAlarmTriggeredDataToFirestore(long timestamp, int heartRate, int stressLevel) {
             FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
             if (user == null) {
                 Log.w(TAG, "User not authenticated, cannot write to Firestore");
@@ -321,7 +433,7 @@ public class AlarmMonitoringService extends Service {
                             if (currentUsername != null) {
                                 Log.d(TAG, "sendNotificationsToConnectedAccounts: Current username: " + currentUsername);
 
-                                // 2. Now use the username to construct the correct path
+
                                 DocumentReference userConnectionDocument = db.collection("connectionRequests").document(currentUsername);
                                 CollectionReference requestsSubcollection = userConnectionDocument.collection("requests");
 
@@ -379,7 +491,7 @@ public class AlarmMonitoringService extends Service {
                             String token = documentSnapshot.getString("fcmToken");
                             if (token != null) {
                                 Log.d(TAG, "fetchAndSendNotification: Found FCM token for requester: " + username);
-                                String notificationBody = constructNotificationBody(heartRate, stressLevel);
+                                String notificationBody = constructNotificationBody(username, heartRate, stressLevel);
                                 // Pass the context (this) as the first argument
                                 Log.d(TAG, "fetchAndSendNotification: Constructing notification body: " + notificationBody);
                                 sendFCMNotification(this, token, "Health Alert", notificationBody);
@@ -393,8 +505,9 @@ public class AlarmMonitoringService extends Service {
                     .addOnFailureListener(e -> Log.w(TAG, "fetchAndSendNotification: Failed to fetch user document for requester: " + username, e));
         }
 
-        private String constructNotificationBody(int heartRate, int stressLevel) {
+        private String constructNotificationBody(String username,int heartRate, int stressLevel) {
             StringBuilder body = new StringBuilder();
+            body.append("Peringatan terjadi dari salah satu akun terhubung |");
             if (heartRate != -1) {
                 body.append("Abnormal heart rate: ").append(heartRate);
             }
@@ -407,7 +520,7 @@ public class AlarmMonitoringService extends Service {
         }
 
         private void sendFCMNotification(Context context, String token, String title, String body) {
-            Log.d(TAG, "sendFCMNotification: Preparing to send notification. Title: " + title + ", Body: " + body + ", Token: " + token);
+            Log.d(TAG, "sendFCMNotification: Preparing to send notification. Title: " + title + ", Body: " + body );
 
             String FCM_API_URL = "https://fcm.googleapis.com/v1/projects/smartschiz-6a1d3/messages:send";
 
@@ -479,17 +592,41 @@ public class AlarmMonitoringService extends Service {
         Log.d(TAG, "Receiver registered for actions: " + DeviceService.ACTION_REALTIME_SAMPLES + " and " + DashboardStressData.ACTION_STRESS_DATA_UPDATED);
 
         LocalBroadcastManager.getInstance(this).registerReceiver(mReceiver, filter);
+        Log.d(TAG, "Broadcast receiver registered for ACTION_REALTIME_SAMPLES");
         Log.d(TAG, "Monitoring service started, Broadcast receiver registered");
         handler = new Handler(Looper.getMainLooper());
+        handler.post(new Runnable() {
+            @Override
+            public void run() {
+                initiateHeartRateTest(); // Trigger heart rate test
+                handler.postDelayed(this, ONE_MINUTE); // Repeat every minute
+            }
+        });
         stressFetchRunnable = new Runnable() {
             @Override
             public void run() {
                 fetchAndMonitorStress();
-                handler.postDelayed(this, ONE_MINUTE); // Schedule next run
+                handler.postDelayed(this, FIVE_MINUTE); // Schedule next run
             }
         };
         handler.post(stressFetchRunnable); // Start the periodic task
     }
+    private boolean isHeartRateTestInProgress = false; // To track if a test is ongoing
+
+    private void initiateHeartRateTest() {
+        if (isHeartRateTestInProgress) {
+            Log.d(TAG, "Heart rate test already in progress, skipping...");
+            return;
+        }
+
+        isHeartRateTestInProgress = true;
+        Log.d(TAG, "Initiating heart rate test...");
+        GBApplication.deviceService().onHeartRateTest(); // Trigger the test
+    }
+    private boolean isStressTestInProgress =false;
+
+
+
     private void fetchAndMonitorStress() {
         List<GBDevice> devices = GBApplication.app().getDeviceManager().getDevices();
         StressSample latestSample = StressDataUtils.getLatestStressSample(devices, this);
@@ -509,10 +646,29 @@ public class AlarmMonitoringService extends Service {
             Log.d(TAG, "No stress data available to monitor");
         }
     }
+
     @Override
     public void onDestroy() {
         super.onDestroy();
         Log.d(TAG, "Receiver unregistered");
         LocalBroadcastManager.getInstance(this).unregisterReceiver(mReceiver);
+
+        // Stop foreground service
+        stopForeground(true);
+
+        // Stop handler from executing further heart rate checks
+        if (handler != null) {
+            handler.removeCallbacksAndMessages(null);
+            Log.d(TAG, "Handler tasks stopped.");
+        }
+
+        // Stop stress monitoring
+        if (stressFetchRunnable != null) {
+            handler.removeCallbacks(stressFetchRunnable);
+            Log.d(TAG, "Stress fetch task stopped.");
+        }
+
+        Log.d(TAG, "Monitoring is Stopping");
     }
+
 }
