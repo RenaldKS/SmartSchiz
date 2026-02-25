@@ -1,105 +1,107 @@
-Gadgetbridge is now hosted on [codeberg.org](https://codeberg.org/Freeyourgadget/Gadgetbridge/).
+# SmartSchiz
 
-<a href="https://codeberg.org/Freeyourgadget/Gadgetbridge/">
-    <img alt="Get it on Codeberg" src="https://get-it-on.codeberg.org/get-it-on-blue-on-white.png" height="60">
-</a>
+**SmartSchiz** is a mobile application developed as part of my undergraduate thesis project.
+The application focuses on monitoring mental health–related patterns by utilizing wearable device data and presenting simple analytics to help users understand their wellbeing trends.
 
-Gadgetbridge
-============
+This project represents my academic exploration of mobile development, data monitoring, and user-centered health technology.
 
-Gadgetbridge is an Android (5.0+) application which will allow you to use your
-Pebble, Mi Band, Amazfit Bip and HPlus device (and more) without the vendor's closed source application
-and without the need to create an account and transmit any of your data to the
-vendor's servers.
+---
 
-[Homepage](https://gadgetbridge.org) - [Blog](https://blog.freeyourgadget.org) - <a rel="me" href="https://social.anoxinon.de/@gadgetbridge">Mastodon</a>
+## 📌 Background
 
-[![Donate](https://liberapay.com/assets/widgets/donate.svg)](https://liberapay.com/Gadgetbridge/donate)
+SmartSchiz was developed for **academic purposes** as a requirement for completing my **undergraduate thesis (skripsi)**.
 
+The project aims to explore how wearable device data can be interpreted and visualized to support mental health monitoring and research experimentation.
 
-[![Translate](https://hosted.weblate.org/widgets/freeyourgadget/-/gadgetbridge/svg-badge.svg)](https://hosted.weblate.org/projects/freeyourgadget/gadgetbridge)
+---
 
-## Code Licenses
+## 🔧 Built From (Fork Information)
 
-* Gadgetbridge is licensed under the AGPLv3
-* Files in app/src/main/java/net/osmand/ and app/src/main/aidl/net/osmand/ are licensed under the GPLv3 by OsmAnd BV
-* Files in app/src/main/java/org/bouncycastle are licensed under the MIT license by The Legion of the Bouncy Castle Inc.
+SmartSchiz is **forked and developed from**:
 
-## Download
+> **GadgetBridge** — an open-source Android application for managing and communicating with wearable devices.
 
-[<img src="https://f-droid.org/badge/get-it-on.png" alt="Get it on F-Droid" height="80">](https://f-droid.org/app/nodomain.freeyourgadget.gadgetbridge)
+This project extends and modifies the original system to support additional research-oriented features and customized data handling required for my thesis.
 
-- [Nightly releases](https://freeyourgadget.codeberg.page/fdroid/repo?fingerprint=CD381ECCC465AB324E21BCC335895615E07E70EE11E9FD1DF3C020C5194F00B2)
-    - Nightly releases are updated more frequently and may be less stable than standard releases, and they are distributed by our F-Droid repository unlike standard releases. 
-- [List of changes](https://codeberg.org/Freeyourgadget/Gadgetbridge/src/master/CHANGELOG.md)
+**Original Project:**
+https://codeberg.org/Freeyourgadget/Gadgetbridge
 
-## Supported Devices
+All credits for the base wearable communication framework belong to the GadgetBridge contributors and community.
 
-Please see the [Gadgets](https://gadgetbridge.org/gadgets/) page on the website for a complete list of supported devices.
+---
 
-## Features
+## ✨ Features (Academic Scope)
 
-Please see the [Features](https://gadgetbridge.org/basics/features/) page on the website.
+* Wearable device data synchronization
+* Health-related data monitoring
+* Basic analytics visualization
+* Customized UI adjustments for research needs
+* Experimental feature integration for thesis evaluation
 
-## Authors
-### Core Team (in order of first code contribution)
+> Note: Features were implemented primarily for academic experimentation rather than production deployment.
 
-* Andreas Shimokawa
-* Carsten Pfeiffer
-* Daniele Gobbetti
-* Petr Vaněk
+---
 
-### Additional contributors
-* João Paulo Barraca (HPlus)
-* Vitaly Svyastyn (NO.1 F1)
-* Sami Alaoui (Teclast H30)
-* "ladbsoft" (XWatch)
-* Sebastian Kranz (ZeTime)
-* Vadim Kaushan (ID115)
-* "maxirnilian" (Lenovo Watch 9)
-* "ksiwczynski", "mkusnierz", "mamutcho" (Lenovo Watch X Plus)
-* Andreas Böhler (Casio)
-* Jean-François Greffier (Mi Scale 2)
-* Johannes Schmitt (BFH-16)
-* Lukas Schwichtenberg (Makibes HR3)
-* Daniel Dakhno (Fossil Q Hybrid, Fossil Hybrid HR)
-* Gordon Williams (Bangle.js)
-* Pavel Elagin (JYou Y5)
-* Taavi Eomäe (iTag)
-* Erik Bloß (TLW64)
-* Yukai Li (Lefun)
-* José Rebelo (Roidmi, Sony Headphones, Miband 7)
-* Arjan Schrijver (Fossil Hybrid HR watchfaces)
+## 🛠️ Technologies Used
 
-## Contribute
+* Android (Java)
+* GadgetBridge Open Source Framework
+* Bluetooth Low Energy (BLE)
+* Mobile UI Development
+* Data Visualization Concepts
+* Firebase Storage
+* Firebase Cloud Messaging
 
-Contributions are welcome, be it feedback, bug reports, documentation, translation, research or code. Feel free to work
-on any of the open [issues](https://codeberg.org/Freeyourgadget/Gadgetbridge/issues);
-just leave a comment that you're working on one to avoid duplicated work.
+---
 
-[Developer documentation](https://codeberg.org/Freeyourgadget/Gadgetbridge/wiki/Developer-Documentation) - [Support for a new Device](https://codeberg.org/Freeyourgadget/Gadgetbridge/wiki/Support-for-a-new-Device) - [New Device Tutorial](https://codeberg.org/Freeyourgadget/Gadgetbridge/wiki/New-Device-Tutorial)
+## 🎓 Academic Context
 
-Translations can be contributed via https://hosted.weblate.org/projects/freeyourgadget/gadgetbridge/
+This application was developed as part of:
 
-## Community
+* Undergraduate Final Project / Thesis (Skripsi)
+* Software Development & Applied Research Study
+* Exploration of wearable technology integration in mental health monitoring
 
-If you would like to get in touch with other Gadgetbridge users and developers outside of Codeberg, you can do so via:
-* Matrix: [`#gadgetbridge:matrix.org`](https://matrix.to/#/#gadgetbridge:matrix.org)
+The project emphasizes learning outcomes, experimentation, and system modification rather than commercial usage.
 
-## Do you have further questions or feedback?
+---
 
-Feel free to open an issue on our issue tracker, but please:
-- do not use the issue tracker as a forum, do not ask for ETAs and read the issue conversation before posting
-- use the search functionality to ensure that your question wasn't already answered. Don't forget to check the **closed** issues as well!
-- remember that this is a community project, people are contributing in their free time because they like doing so: don't take the fun away! Be kind and constructive.
-- Do not ask for help regarding your own projects, unless they are Gadgetbridge related
+## ⚠️ Disclaimer
 
-## Having problems?
+SmartSchiz is an **academic research project** and is not intended to replace professional medical advice, diagnosis, or treatment.
 
-0. Phone crashing during device discovery? Disable Privacy Guard (or similarly named functionality) during discovery.
-1. Open Gadgetbridge's settings and check the option to write log files
-2. Reproduce the problem you encountered
-3. Check the logfile at /sdcard/Android/data/nodomain.freeyourgadget.gadgetbridge/files/gadgetbridge.log
-4. File an issue at https://codeberg.org/Freeyourgadget/Gadgetbridge/issues/new/choose and possibly provide the logfile
+---
 
-Alternatively you may use the standard logcat functionality to access the log.
+## 🚀 Installation (Development)
+
+1. Clone this repository:
+
+   ```bash
+   git clone https://github.com/RenaldKS/smartschiz.git
+   ```
+
+2. Open the project in **Android Studio**
+
+3. Sync Gradle dependencies
+
+4. Build and run on an Android device
+
+---
+
+## 🙋 Author
+
+Developed by a Computer Science undergraduate student as part of a thesis project.
+
+This repository is shared as a learning portfolio and documentation of academic work.
+
+---
+
+## 📄 License & Credits
+
+* Based on **GadgetBridge** (Open Source Project)
+* Respecting original open-source licensing and contributors
+* Modifications created solely for academic research purposes
+
+---
+
+⭐ Thank you for visiting this project repository.
